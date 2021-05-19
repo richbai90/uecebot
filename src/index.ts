@@ -10,8 +10,8 @@ import execBehaviors from './behaviors/ta';
 import connect from './utils/connect';
 import exec from './utils/exec';
 const bots: Map<symbol, Client> = new Map<symbol, Client>();
-const TAKey = Symbol('ta');
-const HelperKey = Symbol('helper');
+const TAKey = Symbol('TA');
+const HelperKey = Symbol('HELPER');
 const ta = connect(TAKey, bots);
 const helper = connect(HelperKey, bots);
 
