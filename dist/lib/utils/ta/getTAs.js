@@ -48,18 +48,16 @@ function getTAs(bot, channel, asString) {
                     return [4 /*yield*/, channel.messages.fetchPinned()];
                 case 1:
                     pinned = _a.sent();
-                    messagePromises = pinned
-                        .filter(function (msg) { return TAregexp.test(msg.content); })
-                        .map(function (msg) { return msg.fetch(true); });
+                    messagePromises = pinned.filter(function (msg) { return TAregexp.test(msg.content); }).map(function (msg) { return msg.fetch(true); });
                     return [4 /*yield*/, Promise.all(messagePromises)];
                 case 2:
                     messages = _a.sent();
                     return [4 /*yield*/, Promise.all(messages.map(function (msg) { return msg.reactions.cache.map(function (r) { return r.users.fetch(); }); }).flat())];
                 case 3:
                     _a.sent();
-                    finalValue = messages.flatMap(function (msg) { return msg.reactions.cache.map(function (r) { return asString
-                        ? r.users.cache.map(function (user) { return user.toString(); })
-                        : r.users.cache.array(); }); });
+                    finalValue = messages.flatMap(function (msg) {
+                        return msg.reactions.cache.map(function (r) { return (asString ? r.users.cache.map(function (user) { return user.toString(); }) : r.users.cache.array()); });
+                    });
                     return [2 /*return*/, finalValue.flat().filter(function (user) { return user.toString() !== bot.user.toString(); })];
             }
         });

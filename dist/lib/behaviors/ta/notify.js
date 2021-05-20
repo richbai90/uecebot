@@ -50,7 +50,7 @@ function notifyTAs(message, bot) {
                     return [4 /*yield*/, getTAs_1.default(bot, message.channel, true)];
                 case 1:
                     TAs = (_a.sent()).join(' ');
-                    message.channel.send(TAs + " Student " + message.author + " is asking for help: " + message.url);
+                    message.channel.send(TAs + " Student <@" + message.author + "> is asking for help");
                     return [2 /*return*/];
             }
         });
