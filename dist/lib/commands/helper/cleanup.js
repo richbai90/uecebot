@@ -40,16 +40,16 @@ var command = {
     name: '!cleanup_semester',
     description: 'Remove everyone from all roles',
     exec: function (msg, msgText) {
-        var _a, _b;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function () {
             var testExpr;
             var _this = this;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
                         if (!((_a = msg.member) === null || _a === void 0 ? void 0 : _a.roles.cache.find(function (r) { return r.name === 'moderator'; })))
                             return [2 /*return*/, false];
-                        testExpr = /^(?:ece|cs|ece\/cs|cs\/ece\s+)/i;
+                        testExpr = /^(?:(?:ece|cs|ece\/cs|cs\/ece)[\s-]+)/i;
                         return [4 /*yield*/, Promise.all(((_b = msg.guild) === null || _b === void 0 ? void 0 : _b.members.cache.map(function (m) { return __awaiter(_this, void 0, void 0, function () {
                                 var _this = this;
                                 return __generator(this, function (_a) {
@@ -70,7 +70,23 @@ var command = {
                                 });
                             }); })) || [])];
                     case 1:
-                        _c.sent();
+                        _d.sent();
+                        return [4 /*yield*/, Promise.all(((_c = msg.guild) === null || _c === void 0 ? void 0 : _c.channels.cache.map(function (ch) { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            if (!testExpr.test(ch.name)) return [3 /*break*/, 3];
+                                            return [4 /*yield*/, ch.clone()];
+                                        case 1:
+                                            _a.sent();
+                                            return [4 /*yield*/, ch.delete('cleanup')];
+                                        case 2: return [2 /*return*/, _a.sent()];
+                                        case 3: return [2 /*return*/, Promise.resolve()];
+                                    }
+                                });
+                            }); })) || [])];
+                    case 2:
+                        _d.sent();
                         return [2 /*return*/, true];
                 }
             });
