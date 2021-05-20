@@ -12,7 +12,6 @@
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "type-check-client": "tsc -p ./src/client/tsconfig.json",
     "build": "tsc -b ./",
-    "prestart": "npm run clean && npm run build",
     "start": "node --unhandled-rejections=strict index.js"
   },
   "keywords": [
