@@ -4,7 +4,7 @@ var discord_js_1 = require("discord.js");
 function default_1(key, cache) {
     if (!key.description)
         return;
-    var bot = new discord_js_1.Client();
+    var bot = new discord_js_1.Client({ ws: { intents: discord_js_1.Intents.ALL } });
     var token = process.env[key.description];
     bot.login(token);
     cache.set(key, bot);

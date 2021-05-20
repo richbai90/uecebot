@@ -1,18 +1,25 @@
+import { assert } from 'console';
 import { Command } from '../../types/Command';
 
 const command: Command = {
-  name: '!cleanup',
+  name: '!cleanup_semester',
   description: 'Remove everyone from all roles',
   async exec(msg, msgText) {
-    if (!msg.member?.roles.resolve('moderator')) return false;
-    const roles = await (await msg.guild?.roles.fetch())?.cache;
-    assert(roles);
-    const testExpr = /ece|cs|ece\/cs|cs\/ece\s+/i;
-    roles
-      ?.filter((r) => testExpr.test(r.name))
-      .forEach((r) => {
-        r.members.forEach((m) => m.roles.remove(r));
-      });
+    if (!msg.member?.roles.cache.find((r) => r.name === 'moderator')) return false;
+    const testExpr = /^(?:ece|cs|ece\/cs|cs\/ece\s+)/i;
+    await Promise.all(
+      msg.guild?.members.cache.map(async (m) => {
+        return await Promise.all(
+          m.roles.cache.map(async (r) => {
+            if (testExpr.test(r.name)) {
+              return await m.roles.remove(r);
+            } else {
+              return Promise.resolve();
+            }
+          }),
+        );
+      }) || [],
+    );
     return true;
   },
 };
