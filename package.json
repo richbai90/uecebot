@@ -11,7 +11,9 @@
     "clean": "rimraf dist",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "type-check-client": "tsc -p ./src/client/tsconfig.json",
-    "build": "tsc -b ./"
+    "build": "tsc -b ./",
+    "prestart": "npm run clean && npm run build",
+    "start": "node --unhandled-rejections=strict index.js"
   },
   "keywords": [
     "typescript",
@@ -52,6 +54,7 @@
     }
   },
   "dependencies": {
+    "core-js": "^3.12.1",
     "discord.js": "^12.5.3",
     "dotenv": "^8.6.0",
     "tslib": "^2.1.0"

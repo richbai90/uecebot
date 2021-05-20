@@ -1,5 +1,4 @@
-import console from 'console';
-
+require('dotenv').config(); // eslint-disable-line
 const { assert } = console;
 console.assert = function (cond: boolean, text: string, dontThrow: boolean) {
   assert(cond);

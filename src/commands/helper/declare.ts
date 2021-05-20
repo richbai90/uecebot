@@ -7,15 +7,15 @@ const command: Command<[Message, string]> = {
   name: '!declare',
   description: 'declare a major',
   async exec(msg, msgText) {
-    const user = msg.member;
+    const member = msg.member;
     const EE = msg.guild?.roles.cache.find((r) => r.name.toLowerCase().trim() === 'ee');
     const CE = msg.guild?.roles.cache.find((r) => r.name.toLowerCase().trim() === 'ce');
-    assert(user && EE && CE);
+    assert(member && EE && CE);
     if (msgText.toLowerCase() === 'ee') {
-      const added = await safely(() => user!.roles.add(EE!));
+      const added = await safely(() => member!.roles.add(EE!));
       return !!added;
     } else if (msgText.toLowerCase() == 'ce') {
-      const added = await safely(() => user!.roles.add(CE!));
+      const added = await safely(() => member!.roles.add(CE!));
       return !!added;
     } else {
       await safely(msg.channel.send, `Unknown major ${msgText}`, {});

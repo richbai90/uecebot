@@ -2,7 +2,6 @@
 // import "core-js/fn/array.find"
 // ...
 
-import './setup.ts';
 import { assert } from 'console';
 import 'core-js';
 import { Client } from 'discord.js';
@@ -18,10 +17,10 @@ const helper = connect(HelperKey, bots);
 assert(ta && helper);
 
 ta!.on('message', async (msg) => {
-  if (await exec(msg)) return;
+  if (await exec(msg, ta!)) return;
   execBehaviors(ta!, msg);
 });
 
 helper!.on('message', async (msg) => {
-  if (await exec(msg)) return;
+  if (await exec(msg, helper!)) return;
 });
