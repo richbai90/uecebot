@@ -53,6 +53,7 @@
     }
   },
   "dependencies": {
+    "@elastic/app-search-node": "^7.13.0",
     "core-js": "^3.12.1",
     "discord.js": "^12.5.3",
     "dotenv": "^8.6.0",
