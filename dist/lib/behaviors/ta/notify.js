@@ -35,8 +35,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var getTAs_1 = require("../../utils/ta/getTAs");
+var getTAs_1 = __importDefault(require("../../utils/ta/getTAs"));
 function notifyTAs(message, bot) {
     return __awaiter(this, void 0, void 0, function () {
         var mentionRegxp, mentions, TAs;
