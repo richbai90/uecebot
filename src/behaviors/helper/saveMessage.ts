@@ -18,7 +18,7 @@ export default async function saveMessage(message: Message, asClient: AppSearchC
       channel: (message.channel as TextChannel).name,
       created: DateTime.fromMillis(message.createdTimestamp).toISO(),
       url: message.url,
-      tags: await genTags(message.content),
+      tags: (await genTags(message.content)).join(','),
     };
     asClient.indexDocument(engineName, doc);
   } catch (err) {
