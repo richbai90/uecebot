@@ -63,7 +63,7 @@ function saveMessage(message, asClient) {
                         _a.url = message.url;
                     return [4 /*yield*/, genTags(message.content)];
                 case 2:
-                    doc = (_a.tags = (_b.sent()).join(' '),
+                    doc = (_a.tags = (_b.sent()).join(','),
                         _a);
                     asClient.indexDocument(engineName, doc);
                     return [3 /*break*/, 4];

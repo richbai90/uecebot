@@ -63,7 +63,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var console_1 = require("console");
 require("core-js");
-var saveMessage_1 = __importDefault(require("./behaviors/helper/saveMessage"));
 var ta_1 = __importDefault(require("./behaviors/ta"));
 var connect_1 = __importStar(require("./utils/connect"));
 var exec_1 = __importDefault(require("./utils/exec"));
@@ -89,10 +88,9 @@ ta.on('message', function (msg) { return __awaiter(void 0, void 0, void 0, funct
 helper.on('message', function (msg) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                saveMessage_1.default(msg, as);
-                return [4 /*yield*/, exec_1.default(msg, helper)];
+            case 0: return [4 /*yield*/, exec_1.default(msg, helper)];
             case 1:
+                //saveMessage(msg, as);
                 if (_a.sent())
                     return [2 /*return*/];
                 return [2 /*return*/];
