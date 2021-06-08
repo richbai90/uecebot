@@ -23,6 +23,6 @@ ta!.on('message', async (msg) => {
 });
 
 helper!.on('message', async (msg) => {
-  saveMessage(msg, as);
+  //saveMessage(msg, as);
   if (await exec(msg, helper!)) return;
 });
