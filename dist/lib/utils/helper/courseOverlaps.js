@@ -39,25 +39,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var getTAs_1 = __importDefault(require("../../utils/ta/getTAs"));
-function notifyTAs(message, bot) {
-    return __awaiter(this, void 0, void 0, function () {
-        var mentionRegxp, mentions, TAs;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    mentionRegxp = /<@[!&]?(\d+)>/g;
-                    mentions = Array.from(message.content.matchAll(mentionRegxp)).map(function (mention) { return bot.users.cache.get(mention[1]) || message.guild.roles.cache.get(mention[1]); });
-                    if (!(mentions.length && mentions.some(function (user) { return user && 'username' in user && user.username === 'TA'; })))
-                        return [2 /*return*/];
-                    return [4 /*yield*/, (0, getTAs_1.default)(bot, message.channel, true)];
-                case 1:
-                    TAs = (_a.sent()).join(' ');
-                    message.channel.send("".concat(TAs, " Student <@").concat(message.author, "> is asking for help"));
-                    return [2 /*return*/];
-            }
-        });
+exports.getCourse = void 0;
+var node_fetch_1 = __importDefault(require("node-fetch"));
+var getCrossListings = function (course) {
+    return (0, node_fetch_1.default)("https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/".concat(course.pid)).then(function (d) { return d.json(); });
+};
+var getCourse = function (course) {
+    return (0, node_fetch_1.default)("https://utah.kuali.co/api/v1/catalog/search/6000afce403c68001bca5f0b?q=".concat(course.replace(/\s/g, ''), "&limit=6"))
+        .then(function (d) { return d.json(); })
+        .then(function (d) { return d[0]; });
+};
+exports.getCourse = getCourse;
+var courseOverlaps = function (course) { return __awaiter(void 0, void 0, void 0, function () {
+    var courseDetails, formattedCourse;
+    var _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                formattedCourse = course.replace(/\s/g, '').toLowerCase();
+                return [4 /*yield*/, (0, exports.getCourse)(formattedCourse)];
+            case 1:
+                if (!(courseDetails = _c.sent())) return [3 /*break*/, 3];
+                return [4 /*yield*/, getCrossListings(courseDetails)];
+            case 2: return [2 /*return*/, ((_b = (_a = (_c.sent())) === null || _a === void 0 ? void 0 : _a.jointlyOffered) !== null && _b !== void 0 ? _b : []).length > 0];
+            case 3: return [2 /*return*/, false];
+        }
     });
-}
-exports.default = notifyTAs;
-//# sourceMappingURL=notify.js.map
+}); };
+exports.default = courseOverlaps;
+//# sourceMappingURL=courseOverlaps.js.map

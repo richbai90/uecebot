@@ -35,29 +35,57 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var getTAs_1 = __importDefault(require("../../utils/ta/getTAs"));
-function notifyTAs(message, bot) {
+function createChannels(roles, guild) {
     return __awaiter(this, void 0, void 0, function () {
-        var mentionRegxp, mentions, TAs;
+        var channels;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    mentionRegxp = /<@[!&]?(\d+)>/g;
-                    mentions = Array.from(message.content.matchAll(mentionRegxp)).map(function (mention) { return bot.users.cache.get(mention[1]) || message.guild.roles.cache.get(mention[1]); });
-                    if (!(mentions.length && mentions.some(function (user) { return user && 'username' in user && user.username === 'TA'; })))
-                        return [2 /*return*/];
-                    return [4 /*yield*/, (0, getTAs_1.default)(bot, message.channel, true)];
-                case 1:
-                    TAs = (_a.sent()).join(' ');
-                    message.channel.send("".concat(TAs, " Student <@").concat(message.author, "> is asking for help"));
-                    return [2 /*return*/];
+                    channels = roles.map(function (role) {
+                        return (function () { return __awaiter(_this, void 0, void 0, function () {
+                            var parent, channel;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0:
+                                        if (!role || !guild)
+                                            return [2 /*return*/, Promise.resolve(undefined)];
+                                        if (role.name.match(/ece/i)) {
+                                            parent = '786279356225028177';
+                                        }
+                                        else if (role.name.match(/cs/i)) {
+                                            parent = '786279763475562547';
+                                        }
+                                        else {
+                                            parent = '786280014382497832';
+                                        }
+                                        return [4 /*yield*/, guild.channels.create(role.name.replace(/\s*|\/*/g, '-'), {
+                                                type: 'GUILD_TEXT',
+                                                permissionOverwrites: [
+                                                    {
+                                                        id: guild.roles.everyone,
+                                                        deny: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
+                                                    },
+                                                    {
+                                                        id: role.id,
+                                                        allow: ['VIEW_CHANNEL', 'SEND_MESSAGES', 'READ_MESSAGE_HISTORY'],
+                                                    },
+                                                ],
+                                                parent: parent,
+                                            })];
+                                    case 1:
+                                        channel = _a.sent();
+                                        return [2 /*return*/, channel];
+                                }
+                            });
+                        }); })();
+                    });
+                    return [4 /*yield*/, Promise.all(channels)];
+                case 1: return [2 /*return*/, _a.sent()];
             }
         });
     });
 }
-exports.default = notifyTAs;
-//# sourceMappingURL=notify.js.map
+exports.default = createChannels;
+//# sourceMappingURL=createChannels.js.map

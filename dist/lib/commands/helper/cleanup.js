@@ -40,12 +40,12 @@ var command = {
     name: '!cleanup_semester',
     description: 'Remove everyone from all roles',
     exec: function (msg, msgText) {
-        var _a, _b, _c;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
             var testExpr;
             var _this = this;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
                         if (!((_a = msg.member) === null || _a === void 0 ? void 0 : _a.roles.cache.find(function (r) { return r.name === 'moderator'; })))
                             return [2 /*return*/, false];
@@ -70,23 +70,17 @@ var command = {
                                 });
                             }); })) || [])];
                     case 1:
-                        _d.sent();
-                        return [4 /*yield*/, Promise.all(((_c = msg.guild) === null || _c === void 0 ? void 0 : _c.channels.cache.map(function (ch) { return __awaiter(_this, void 0, void 0, function () {
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0:
-                                            if (!testExpr.test(ch.name)) return [3 /*break*/, 3];
-                                            return [4 /*yield*/, ch.clone()];
-                                        case 1:
-                                            _a.sent();
-                                            return [4 /*yield*/, ch.delete('cleanup')];
-                                        case 2: return [2 /*return*/, _a.sent()];
-                                        case 3: return [2 /*return*/, Promise.resolve()];
-                                    }
-                                });
-                            }); })) || [])];
-                    case 2:
-                        _d.sent();
+                        _c.sent();
+                        // await Promise.all(
+                        //   msg.guild?.channels.cache.map(async (ch) => {
+                        //     if (testExpr.test(ch.name)) {
+                        //       await ch.clone();
+                        //       return await ch.delete('cleanup');
+                        //     } else {
+                        //       return Promise.resolve();
+                        //     }
+                        //   }) || [],
+                        // );
                         return [2 /*return*/, true];
                 }
             });

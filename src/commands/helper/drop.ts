@@ -6,7 +6,7 @@ const command: Command = {
   description: 'Enroll in a class',
   async exec(msg, msgText) {
     const classes = msgText.split(',');
-    const roles = await (await msg.guild?.roles.fetch())?.cache;
+    const roles = await msg.guild?.roles.fetch();
     const member = msg.member;
     assert(roles && member);
     const skipped = await classes.reduce(async (s, c) => {

@@ -49,7 +49,7 @@ exports.setup = {
             var message;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, getTAs_1.default(msg.client, msg.channel, false)];
+                    case 0: return [4 /*yield*/, (0, getTAs_1.default)(msg.client, msg.channel, false)];
                     case 1:
                         if ((_a.sent()).length) {
                             msg.channel.send('This channel has already been setup');
