@@ -13,7 +13,7 @@
     "type-check-client": "tsc -p ./src/client/tsconfig.json",
     "build": "tsc -b ./",
     "start": "node --unhandled-rejections=strict index.js",
-    "prestart": "npm run clean && npm run build"
+    "_prestart": "npm run clean && npm run build"
   },
   "keywords": [
     "typescript",
