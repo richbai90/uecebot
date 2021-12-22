@@ -2,25 +2,6 @@
 // Import here Polyfills if needed. Recommended core-js (npm i -D core-js)
 // import "core-js/fn/array.find"
 // ...
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -64,23 +45,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var console_1 = require("console");
 require("core-js");
 var ta_1 = __importDefault(require("./behaviors/ta"));
-var connect_1 = __importStar(require("./utils/connect"));
+var connect_1 = __importDefault(require("./utils/connect"));
 var exec_1 = __importDefault(require("./utils/exec"));
 var bots = new Map();
 var TAKey = Symbol('TA');
 var HelperKey = Symbol('HELPER');
-var ta = connect_1.default(TAKey, bots);
-var helper = connect_1.default(HelperKey, bots);
-var as = connect_1.asConnect();
-console_1.assert(ta && helper);
+var ta = (0, connect_1.default)(TAKey, bots);
+var helper = (0, connect_1.default)(HelperKey, bots);
+(0, console_1.assert)(ta && helper);
 ta.on('message', function (msg) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, exec_1.default(msg, ta)];
+            case 0: return [4 /*yield*/, (0, exec_1.default)(msg, ta)];
             case 1:
                 if (_a.sent())
                     return [2 /*return*/];
-                ta_1.default(ta, msg);
+                (0, ta_1.default)(ta, msg);
                 return [2 /*return*/];
         }
     });
@@ -88,7 +68,7 @@ ta.on('message', function (msg) { return __awaiter(void 0, void 0, void 0, funct
 helper.on('message', function (msg) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, exec_1.default(msg, helper)];
+            case 0: return [4 /*yield*/, (0, exec_1.default)(msg, helper)];
             case 1:
                 //saveMessage(msg, as);
                 if (_a.sent())

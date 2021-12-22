@@ -8,7 +8,7 @@ async function getTAs(bot: Client, channel: TextChannel, asString: boolean) {
   const messages = await Promise.all(messagePromises);
   await Promise.all(messages.map((msg) => msg.reactions.cache.map((r) => r.users.fetch())).flat());
   const finalValue = messages.flatMap((msg) =>
-    msg.reactions.cache.map((r) => (asString ? r.users.cache.map((user) => user.toString()) : r.users.cache.array())),
+    msg.reactions.cache.map((r) => (asString ? r.users.cache.map((user) => user.toString()) : r.users.cache.values)),
   );
   return finalValue.flat().filter((user) => user.toString() !== bot.user!.toString());
 }

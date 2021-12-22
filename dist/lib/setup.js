@@ -1,4 +1,3 @@
-"use strict";
 require('dotenv').config(); // eslint-disable-line
 var assert = console.assert;
 console.assert = function (cond, text, dontThrow) {

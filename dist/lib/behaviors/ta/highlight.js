@@ -47,7 +47,7 @@ function highlightTAContent(message, bot) {
             switch (_a.label) {
                 case 0:
                     emoji = bot.emojis.cache.findKey(function (e) { return e.name === 'mario'; });
-                    return [4 /*yield*/, getTAs_1.default(bot, message.channel, false)];
+                    return [4 /*yield*/, (0, getTAs_1.default)(bot, message.channel, false)];
                 case 1:
                     TAs = _a.sent();
                     if (!TAs.some(function (ta) { return ta.id === message.author.id; })) return [3 /*break*/, 4];

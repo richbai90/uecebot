@@ -4,7 +4,7 @@
     "target": "es5",
     "module": "commonjs",
     "lib": ["ES2015", "ES2016", "ES2017", "ES2018", "ES2019", "ES2020"],
-    "strict": true,
+    "strict": false,
     "sourceMap": true,
     "declaration": true,
     "allowSyntheticDefaultImports": true,
@@ -14,7 +14,7 @@
     "declarationDir": "dist/types",
     "outDir": "dist/lib",
     "typeRoots": ["node_modules/@types", "src/types"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
-  "include": ["src"]
+  "include": ["src"],
 }

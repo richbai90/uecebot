@@ -5,18 +5,16 @@
 import { assert } from 'console';
 import 'core-js';
 import { Client } from 'discord.js';
-import saveMessage from './behaviors/helper/saveMessage';
 import execBehaviors from './behaviors/ta';
-import connect, { asConnect } from './utils/connect';
+import connect from './utils/connect';
 import exec from './utils/exec';
+import courseOverlaps from './utils/helper/courseOverlaps';
 const bots: Map<symbol, Client> = new Map<symbol, Client>();
 const TAKey = Symbol('TA');
 const HelperKey = Symbol('HELPER');
 const ta = connect(TAKey, bots);
 const helper = connect(HelperKey, bots);
-const as = asConnect();
 assert(ta && helper);
-
 ta!.on('message', async (msg) => {
   if (await exec(msg, ta!)) return;
   execBehaviors(ta!, msg);

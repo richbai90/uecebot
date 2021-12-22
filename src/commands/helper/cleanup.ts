@@ -20,16 +20,16 @@ const command: Command = {
         );
       }) || [],
     );
-    await Promise.all(
-      msg.guild?.channels.cache.map(async (ch) => {
-        if (testExpr.test(ch.name)) {
-          await ch.clone();
-          return await ch.delete('cleanup');
-        } else {
-          return Promise.resolve();
-        }
-      }) || [],
-    );
+    // await Promise.all(
+    //   msg.guild?.channels.cache.map(async (ch) => {
+    //     if (testExpr.test(ch.name)) {
+    //       await ch.clone();
+    //       return await ch.delete('cleanup');
+    //     } else {
+    //       return Promise.resolve();
+    //     }
+    //   }) || [],
+    // );
     return true;
   },
 };

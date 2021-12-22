@@ -1,1 +1,1 @@
-declare const assert: (value: any, message?: string | undefined, ...optionalParams: any[]) => void;
+declare const assert: (value: any, message?: string, ...optionalParams: any[]) => void;

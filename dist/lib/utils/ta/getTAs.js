@@ -56,7 +56,7 @@ function getTAs(bot, channel, asString) {
                 case 3:
                     _a.sent();
                     finalValue = messages.flatMap(function (msg) {
-                        return msg.reactions.cache.map(function (r) { return (asString ? r.users.cache.map(function (user) { return user.toString(); }) : r.users.cache.array()); });
+                        return msg.reactions.cache.map(function (r) { return (asString ? r.users.cache.map(function (user) { return user.toString(); }) : r.users.cache.values); });
                     });
                     return [2 /*return*/, finalValue.flat().filter(function (user) { return user.toString() !== bot.user.toString(); })];
             }

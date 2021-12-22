@@ -41,20 +41,19 @@ var command = {
     name: '!drop',
     description: 'Enroll in a class',
     exec: function (msg, msgText) {
-        var _a, _b;
+        var _a;
         return __awaiter(this, void 0, void 0, function () {
             var classes, roles, member, skipped;
             var _this = this;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         classes = msgText.split(',');
                         return [4 /*yield*/, ((_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.fetch())];
-                    case 1: return [4 /*yield*/, ((_b = (_c.sent())) === null || _b === void 0 ? void 0 : _b.cache)];
-                    case 2:
-                        roles = _c.sent();
+                    case 1:
+                        roles = _b.sent();
                         member = msg.member;
-                        console_1.assert(roles && member);
+                        (0, console_1.assert)(roles && member);
                         return [4 /*yield*/, classes.reduce(function (s, c) { return __awaiter(_this, void 0, void 0, function () {
                                 var role;
                                 return __generator(this, function (_a) {
@@ -77,13 +76,13 @@ var command = {
                                     }
                                 });
                             }); }, Promise.resolve([]))];
-                    case 3:
-                        skipped = _c.sent();
+                    case 2:
+                        skipped = _b.sent();
                         if (skipped.length > 0) {
-                            msg.channel.send("<@" + (member === null || member === void 0 ? void 0 : member.user) + ">: I was unable to remove the following classes: " + skipped.join(', ') + ". Please reach out to a moderator to get these channels removed.");
+                            msg.channel.send("<@".concat(member === null || member === void 0 ? void 0 : member.user, ">: I was unable to remove the following classes: ").concat(skipped.join(', '), ". Please reach out to a moderator to get these channels removed."));
                         }
                         else {
-                            msg.channel.send("<@" + (member === null || member === void 0 ? void 0 : member.user) + ">: You have been removed from the requested classes.");
+                            msg.channel.send("<@".concat(member === null || member === void 0 ? void 0 : member.user, ">: You have been removed from the requested classes."));
                         }
                         return [2 /*return*/, true];
                 }

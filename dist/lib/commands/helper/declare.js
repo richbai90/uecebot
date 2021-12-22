@@ -54,19 +54,19 @@ var command = {
                         member = msg.member;
                         EE = (_a = msg.guild) === null || _a === void 0 ? void 0 : _a.roles.cache.find(function (r) { return r.name.toLowerCase().trim() === 'ee'; });
                         CE = (_b = msg.guild) === null || _b === void 0 ? void 0 : _b.roles.cache.find(function (r) { return r.name.toLowerCase().trim() === 'ce'; });
-                        console_1.assert(member && EE && CE);
+                        (0, console_1.assert)(member && EE && CE);
                         if (!(msgText.toLowerCase() === 'ee')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, safely_1.default(function () { return member.roles.add(EE); })];
+                        return [4 /*yield*/, (0, safely_1.default)(function () { return member.roles.add(EE); })];
                     case 1:
                         added = _c.sent();
                         return [2 /*return*/, !!added];
                     case 2:
                         if (!(msgText.toLowerCase() == 'ce')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, safely_1.default(function () { return member.roles.add(CE); })];
+                        return [4 /*yield*/, (0, safely_1.default)(function () { return member.roles.add(CE); })];
                     case 3:
                         added = _c.sent();
                         return [2 /*return*/, !!added];
-                    case 4: return [4 /*yield*/, safely_1.default(msg.channel.send, "Unknown major " + msgText, {})];
+                    case 4: return [4 /*yield*/, (0, safely_1.default)(msg.channel.send, "Unknown major ".concat(msgText))];
                     case 5:
                         _c.sent();
                         _c.label = 6;
