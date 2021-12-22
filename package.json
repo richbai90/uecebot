@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "tsc ./src/utils/helper/courseOverlaps.ts && node ./src/utils/helper/courseOverlaps.js",
-    "clean": "rimraf dist",
+    "clean": "rm -rf dist",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "type-check-client": "tsc -p ./src/client/tsconfig.json",
     "build": "tsc -b ./",
