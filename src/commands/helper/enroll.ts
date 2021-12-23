@@ -16,18 +16,20 @@ const command: Command = {
     assert(roles && member);
     let skipped = await classes.reduce(async (s, c) => {
       // don't allow roles other than ece/cs roles to be added
-      c = c.toLowerCase().replace(/\s*/g, '');
+      c = formatCourse(c);
       if (c.split(/ece|cs|math/).length < 2) {
         s.then((a) => a.push(c));
         return s;
       }
-      let role = roles!.find((r) => c === r.name.toLowerCase().replace(/\s*/g, ''));
+      let role = roles!.find((r) => c === formatCourse(r.name));
       if (role) {
         await member!.roles.add(role);
       } else if (
         (overlaps = await courseOverlaps(c)) &&
-        (role = roles!.find((r) => changeDepartment(c) === r.name.toLowerCase().replace(/\s*/g, '')))
+        (role = roles!.find((r) => changeDepartment(c) === formatCourse(r.name)))
       ) {
+        await member!.roles.add(role);
+      } else if (is5767(c) && (role = roles.find((r) => formatCourse(r.name) === make5767(c)))) {
         await member!.roles.add(role);
       } else {
         if (overlaps) {
@@ -92,6 +94,18 @@ const command: Command = {
 
 function changeDepartment(courseName: string) {
   return courseName.replace(/(ece|cs)/i, (_match, $1) => ($1?.toLowerCase() === 'ece' ? 'cs' : 'ece'));
+}
+
+function formatCourse(course: string) {
+  return course.replace(/\s+/g, '').toLowerCase();
+}
+
+function is5767(course: string) {
+  return formatCourse(course).match(/^(?:ece|cs)(5|6)7\d+/);
+}
+
+function make5767(course: string) {
+  return course.replace(/(5|6)(7\d+)/, (match, $1, $2) => ($1 == '5' ? `6${$2}` : `5${$2}`));
 }
 
 export default command;
