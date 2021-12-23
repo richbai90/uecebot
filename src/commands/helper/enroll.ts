@@ -47,20 +47,23 @@ const command: Command = {
       //     ', ',
       //   )}. Please reach out to a moderator to get the channel added.`,
       // );
-      const creatingRoles: Promise<Role | undefined>[] = [];
+
       skipped = skipped.filter(async (r) => {
-        r = r.replace(/(ece|cs)/gi, (_, $1) => {
+        r = r.replace(/(ece|cs|math)/gi, (_, $1) => {
           return $1.toUpperCase() + ' ';
         });
         if (r.split(/ece|cs|math/i).length < 2) return true; // skipping dangerous roles
+        return false;
+      });
+      const creatingRoles: Promise<Role>[] = await ((skipped.reduce as unknown) as any)(async (cr, r, i) => {
         const _r = r.split('/').map((__r) => getCourse(__r));
         const roleNames: string[] = [];
         for await (const temp of _r) {
-          if (!temp) return true;
-          roleNames.push(temp);
+          if (!temp) return cr;
+          roleNames.push(temp.code.replace(/^([a-zA-Z]+)(\d+)$/, '$1 $2'));
         }
         for (let i = 0; i < roleNames.length; i++) {
-          creatingRoles.push(
+          cr.push(
             (async () => {
               const role = await msg.guild?.roles.create({
                 name: roleNames[i],
@@ -69,22 +72,21 @@ const command: Command = {
               return role;
             })(),
           );
+          skipped.splice(i, 1);
+          return cr;
         }
+      }, ([] as unknown) as Promise<Role>[]);
 
-        return false;
-      });
-
-      const newChannels = await createChannels(await Promise.all(creatingRoles), msg.guild ?? undefined);
-      for await (const channel of newChannels) {
-        if (channel) msg.channel.send(`${member?.user}: You have been added to ${channel}`);
+      const creatingChannels = await createChannels(await Promise.all(creatingRoles), msg.guild ?? undefined);
+      const newChannels = await Promise.all(creatingChannels);
+      skipped.filter((r) => !newChannels.some((c) => r == c.toString().split('-').join(' ').replace(/\W/g, '')));
+      if (skipped.length) {
+        msg.channel.send(`${member} I was unable to find or create the following courses: ${skipped.join(',')}`);
+      } else {
+        msg.channel.send(`${member} You have been added to the requested courses`);
       }
-      if (skipped.length)
-        msg.channel.send(`${member?.user}: I was unable to find or create the following roles: ${skipped.join(',')}`);
-    } else {
-      msg.channel.send(`${member?.user}: You have been added to the requested classes.`);
+      return true;
     }
-
-    return true;
   },
 };
 

@@ -15,7 +15,7 @@ export default async function createChannels(
       } else {
         parent = '786280014382497832';
       }
-      const channel = await guild.channels.create(role.name.replace(/\s*|\/*/g, '-'), {
+      const channel = await guild.channels.create(role.name.replace(/\s+?|\/+?/g, '-'), {
         type: 'GUILD_TEXT',
         permissionOverwrites: [
           {
