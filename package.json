@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": "12.16.1"
+    "node": "16.11.0"
   },
   "scripts": {
     "test": "tsc ./src/utils/helper/courseOverlaps.ts && node ./src/utils/helper/courseOverlaps.js",
@@ -13,7 +13,7 @@
     "type-check-client": "tsc -p ./src/client/tsconfig.json",
     "build": "tsc -b ./",
     "start": "node --unhandled-rejections=strict index.js",
-    "_prestart": "npm run clean && npm run build"
+    "prestart": "npm run clean && npm run build"
   },
   "keywords": [
     "typescript",
