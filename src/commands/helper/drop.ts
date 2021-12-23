@@ -25,7 +25,7 @@ const command: Command = {
 
     if (skipped.length > 0) {
       msg.channel.send(
-        `<@${member?.user}>: I was unable to remove the following classes: ${skipped.join(
+        `${member?.user}: I was unable to remove the following classes: ${skipped.join(
           ', ',
         )}. Please reach out to a moderator to get these channels removed.`,
       );
