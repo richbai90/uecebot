@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "@elastic/app-search-node": "^7.13.0",
+    "@types/ramda": "^0.27.62",
     "core-js": "^3.12.1",
     "discord.js": "^13.3.1",
     "dotenv": "^8.6.0",
@@ -62,6 +63,7 @@
     "natural": "^5.0.3",
     "node-fetch": "^2.6.6",
     "node-html-parser": "^5.1.0",
+    "ramda": "^0.27.1",
     "tslib": "^2.3.1"
   },
   "devDependencies": {

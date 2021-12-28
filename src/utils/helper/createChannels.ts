@@ -2,7 +2,7 @@ import { Channel, Guild, Role } from 'discord.js';
 
 export default async function createChannels(
   roles: (Role | undefined)[],
-  guild?: Guild,
+  guild: Guild,
 ): Promise<(Channel | undefined)[]> {
   const channels = roles.map((role) =>
     (async () => {
