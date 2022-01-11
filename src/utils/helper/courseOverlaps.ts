@@ -11,9 +11,11 @@ export const getCourse = (course: string): Promise<Record<string, unknown> | und
 const courseOverlaps = async (course: string) => {
   let courseDetails;
   const formattedCourse = formatCourse(course);
-  if ((courseDetails = await getCourse(formattedCourse))) {
-    return (((await getCrossListings(courseDetails))?.jointlyOffered as any[]) ?? []).length > 0;
-  }
+  try {
+    if ((courseDetails = await getCourse(formattedCourse))) {
+      return (((await getCrossListings(courseDetails))?.jointlyOffered as any[]) ?? []).length > 0;
+    }
+  } catch {}
   return false;
 };
 

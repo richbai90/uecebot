@@ -30,10 +30,12 @@ export const createAndGrantNewRoles = async (
         : null,
     ),
   );
-  const promisedRoles = await Promise.all(newRoles);
-  const grantedRoles = await Promise.all(grantExistingRoles(member, promisedRoles, manager.cache));
-  await createChannels(grantedRoles, member.guild);
-  return promisedRoles.map((r) => Promise.resolve(r));
+  try {
+    const promisedRoles = await Promise.all(newRoles);
+    const grantedRoles = await Promise.all(grantExistingRoles(member, promisedRoles, manager.cache));
+    await createChannels(grantedRoles, member.guild);
+    return promisedRoles.map((r) => Promise.resolve(r));
+  } catch {}
 };
 
 function formatRole(roleName: string) {
