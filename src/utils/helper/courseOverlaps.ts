@@ -1,6 +1,6 @@
 import fetch, { Headers } from 'node-fetch';
 import formatCourse from './formatCourse';
-const getCrossListings = (course: any) =>
+const getCrossListings = (course: any) : any =>
   fetch(`https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${course.pid}`).then((d) => d.json());
 
 export const getCourse = (course: string): Promise<Record<string, unknown> | undefined> =>

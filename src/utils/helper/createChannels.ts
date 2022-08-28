@@ -8,9 +8,12 @@ export default async function createChannels(
     (async () => {
       if (!role || !guild) return Promise.resolve(undefined);
       let parent;
-      if (role.name.match(/ece/i)) {
+      if (role.name.match(/ece.[0-4]/i)) {
         parent = '786279356225028177';
-      } else if (role.name.match(/cs/i)) {
+      } else if (role.name.match(/ece.[5-9]/i))  {
+        parent = '936695108085096469'
+      }
+      else if (role.name.match(/cs/i)) {
         parent = '786279763475562547';
       } else {
         parent = '786280014382497832';
