@@ -33,11 +33,22 @@ const command: Command = {
     // check for any roles that exist as a 57/67 difference
     const gradCourses = getGradCourses(nonExistingCourses);
     existingCourses = mergeArr(existingCourses, classRoleExists(gradCourses, roles));
-    nonExistingCourses = swap(nonExistingCourses, gradCourses, (a, b) => make5767(a) === b);
+    // do not overrwrite nonexisting courses incase the 5/6 difference doesn't exist
+    let nonExistingGradCourses = swap(nonExistingCourses, gradCourses, (a, b) => make5767(a) === b);
     nonExistingCourses = difference(nonExistingCourses, existingCourses);
     // check for any roles that exist as a 57/67 difference under a different name
     existingCourses = await getExistingAndCrosslistedRoles(roles, existingCourses, nonExistingCourses);
-    nonExistingCourses = difference(nonExistingCourses, existingCourses);
+    nonExistingGradCourses = difference(nonExistingGradCourses, existingCourses);
+
+    if (nonExistingGradCourses.length) {
+      existingCourses.filter((ec) => {
+        return isGradCourse(ec) && nonExistingGradCourses.some(e => make5767(e) == ec)
+      })
+    } else {
+      existingCourses.filter(ec => {
+        return !isGradCourse(ec)
+      })
+    }
 
     const promises = [
       ...grantExistingRoles(member, existingCourses, roles),
@@ -45,7 +56,7 @@ const command: Command = {
     ];
 
     const messages = (await Promise.all(promises)).map((role) =>
-      channel.send(`${member}: You have been added to ${role.name}`),
+      channel.send(`${member}: You have been added to ${role?.name}`),
     );
 
     await Promise.all(messages);

@@ -24,10 +24,11 @@ export const createAndGrantNewRoles = async (
   manager: RoleManager,
 ): Promise<Promise<Role>[]> => {
   const newRoles = roles.map((r) =>
-    getCourse(r).then((c) =>
-      c
+    getCourse(r).then((c) => {
+      return c
         ? manager.create({ name: formatRole(r), mentionable: true, reason: `Requested by ${member.displayName}` })
-        : null,
+        : null
+    }
     ),
   );
   try {
@@ -35,7 +36,7 @@ export const createAndGrantNewRoles = async (
     const grantedRoles = await Promise.all(grantExistingRoles(member, promisedRoles, manager.cache));
     await createChannels(grantedRoles, member.guild);
     return promisedRoles.map((r) => Promise.resolve(r));
-  } catch {}
+  } catch { }
 };
 
 function formatRole(roleName: string) {
