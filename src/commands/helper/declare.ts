@@ -18,7 +18,7 @@ const command: Command<[Message, string]> = {
       const added = await safely(() => member!.roles.add(CE!));
       return !!added;
     } else {
-      await safely(msg.channel.send, `Unknown major ${msgText}`);
+      //await safely(msg.channel.send, `Unknown major ${msgText}`);
     }
     return false;
   },

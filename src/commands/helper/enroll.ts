@@ -1,173 +1,187 @@
-import { assert } from 'console';
-import { Collection, Role, TextChannel } from 'discord.js';
-import formatCourse from '../../utils/helper/formatCourse';
-import { Command } from '../../types/Command';
-import courseOverlaps, { getCourse } from '../../utils/helper/courseOverlaps';
-import createChannels from '../../utils/helper/createChannels';
-import scrubRoleRequests from '../../utils/helper/scrubRoleRequests';
-import { classExists, courseIsNotRole, courseIsRole, exists } from '../../utils/helper/filters';
-import { userAdded } from '../../utils/helper/notifications';
-import { difference } from 'ramda';
-import addUserToRole from '../../utils/helper/addUserToRole';
-import mergeArr from '../../utils/mergeArr';
-import { classRoleDoesntExist, classRoleExists } from '../../utils/helper/classRoleExists';
-import { createAndGrantNewRoles, grantExistingRoles } from '../../utils/helper/grantRoles';
-import swap from '../../utils/swap';
+import { setContext } from '@sentry/node';
+import {
+  AutocompleteInteraction,
+  ChannelType,
+  ChatInputCommandInteraction,
+  Guild,
+  GuildMemberRoleManager,
+  Message,
+  PermissionsBitField,
+  Role,
+  RoleManager,
+  SlashCommandBuilder,
+} from 'discord.js';
+import fetch from 'node-fetch';
 
-const command: Command = {
-  name: '!enroll',
-  description: 'Enroll in a class',
-  async exec(msg, msgText) {
-    const classes = scrubRoleRequests(msgText.split(','));
-    const roles = await msg.guild?.roles.fetch();
-    const member = msg.member;
-    const channel = msg.channel as TextChannel;
-    assert(roles && member);
+interface ICourse {
+  id: string;
+  pid: string;
+  title: string;
+  description: string;
+  code: string;
+  subjectCode: {
+    id: string;
+    name: string;
+    description: string;
+    linkedGroup: string;
+  };
+  number: string;
+  type: string;
+}
 
-    // check for any roles that already exist
-    let existingCourses = classRoleExists(classes, roles);
-    let nonExistingCourses = classRoleDoesntExist(classes, roles);
-    // check for any roles that existt as a different name
-    existingCourses = await getExistingAndCrosslistedRoles(roles, existingCourses, nonExistingCourses);
-    nonExistingCourses = difference(nonExistingCourses, existingCourses);
-    // check for any roles that exist as a 57/67 difference
-    const gradCourses = getGradCourses(nonExistingCourses);
-    existingCourses = mergeArr(existingCourses, classRoleExists(gradCourses, roles));
-    // do not overrwrite nonexisting courses incase the 5/6 difference doesn't exist
-    let nonExistingGradCourses = swap(nonExistingCourses, gradCourses, (a, b) => make5767(a) === b);
-    nonExistingCourses = difference(nonExistingCourses, existingCourses);
-    // check for any roles that exist as a 57/67 difference under a different name
-    existingCourses = await getExistingAndCrosslistedRoles(roles, existingCourses, nonExistingCourses);
-    nonExistingGradCourses = difference(nonExistingGradCourses, existingCourses);
+interface ICourseDetails extends ICourse {
+  jointlyOffered?: [
+    {
+      __catalogCourseId: string;
+      pid: string;
+      title: string;
+    },
+  ];
+  designationDescription?: string;
+  __passedCatalogQuery?: boolean;
+  courseRules?: string;
+  component?: [
+    {
+      name: string;
+      id: string;
+    },
+  ];
+  credits?: {
+    credits: {
+      min: string;
+      max: string;
+    };
+    value: string;
+    chosen: string;
+  };
+  dateStart?: string;
+  catalogActivationDate?: string;
+  _score?: number;
+}
 
-    if (nonExistingGradCourses.length) {
-      existingCourses.filter((ec) => {
-        return isGradCourse(ec) && nonExistingGradCourses.some(e => make5767(e) == ec)
-      })
-    } else {
-      existingCourses.filter(ec => {
-        return !isGradCourse(ec)
-      })
-    }
+async function searchKuali(query: string): Promise<ICourse[]> {
+  const response = await fetch(
+    `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query}&limit=6`,
+  );
+  if (response.ok) {
+    const data = await response.json();
+    return data
+      .filter((c: any) => c.subjectCode.name.toUpperCase() === 'CS' || c.subjectCode.name.toUpperCase() === 'ECE')
+      .map((c: any) => ({ ...c, code: c.code.replace(/([A-Z])(\d)/, '$1 $2') }));
+  }
+  throw new Error(response.statusText);
+}
 
-    const promises = [
-      ...grantExistingRoles(member, existingCourses, roles),
-      ...(await createAndGrantNewRoles(member, nonExistingCourses, msg.guild.roles)),
-    ];
-
-    const messages = (await Promise.all(promises)).map((role) =>
-      channel.send(`${member}: You have been added to ${role?.name}`),
+async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
+  const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/${pid}`);
+  if (response.ok) {
+    const data = await response.json();
+    return data.filter(
+      (c: any) => c.subjectCode.name.toUpperCase() === 'CS' || c.subjectCode.name.toUpperCase() === 'ECE',
     );
-
-    await Promise.all(messages);
-
-    return true;
-
-    //   let skipped = await classes.reduce(async (s, c) => {
-    //     let role = roles!.find((r) => c === formatCourse(r.name));
-    //     if (role) {
-    //       await member!.roles.add(role);
-    //     } else if (
-    //       (overlaps = await courseOverlaps(c)) &&
-    //       (role = roles!.find((r) => changeDepartment(c) === formatCourse(r.name)))
-    //     ) {
-    //       await member!.roles.add(role);
-    //     } else if (is5767(c) && (role = roles.find((r) => formatCourse(r.name) === make5767(c)))) {
-    //       await member!.roles.add(role);
-    //     } else {
-    //       if (overlaps) {
-    //         s.then((a) => {
-    //           a.push(`${c}/${changeDepartment(c)}`);
-    //         });
-    //       } else {
-    //         s.then((a) => a.push(c));
-    //       }
-    //     }
-    //     return s;
-    //   }, Promise.resolve([] as string[]));
-
-    //   if (skipped.length > 0) {
-    //     // msg.channel.send(
-    //     //   `${member?.user}: I was unable to find a channel associated with the following classes: ${skipped.join(
-    //     //     ', ',
-    //     //   )}. Please reach out to a moderator to get the channel added.`,
-    //     // );
-
-    //     skipped = skipped.filter(async (r) => {
-    //       r = r.replace(/(ece|cs|math)/gi, (_, $1) => {
-    //         return $1.toUpperCase() + ' ';
-    //       });
-    //       if (r.split(/ece|cs|math/i).length < 2) return false; // skipping dangerous roles
-    //       return true;
-    //     });
-    //     const creatingRoles: Promise<Role>[] = await ((skipped.reduce as unknown) as any)(async (cr, r, i) => {
-    //       const _r = r.split('/').map((__r) => getCourse(__r));
-    //       const roleNames: string[] = [];
-    //       for await (const temp of _r) {
-    //         if (!temp) return cr;
-    //         roleNames.push(temp.code.replace(/^([a-zA-Z]+)(\d+)$/, '$1 $2'));
-    //       }
-    //       for (let i = 0; i < roleNames.length; i++) {
-    //         cr.push(
-    //           (async () => {
-    //             const role = await msg.guild?.roles.create({
-    //               name: roleNames[i],
-    //             });
-    //             await member!.roles.add(role.id);
-    //             return role;
-    //           })(),
-    //         );
-    //         skipped.splice(i, 1);
-    //         return cr;
-    //       }
-    //     }, ([] as unknown) as Promise<Role>[]);
-
-    //     const creatingChannels = await createChannels(await Promise.all(creatingRoles), msg.guild ?? undefined);
-    //     const newChannels = await Promise.all(creatingChannels);
-    //     skipped.filter((r) => !newChannels.some((c) => r == c.toString().split('-').join(' ').replace(/\W/g, '')));
-    //     if (skipped.length) {
-    //       msg.channel.send(`${member} I was unable to find or create the following courses: ${skipped.join(',')}`);
-    //     } else {
-    //       msg.channel.send(`${member} You have been added to the requested courses`);
-    //     }
-    //     return true;
-    //   }
-    // },
-  },
-};
-
-function changeDepartment(courseName: string) {
-  return courseName.replace(/(ece|cs)/i, (_match, $1) => ($1?.toLowerCase() === 'ece' ? 'cs' : 'ece'));
+  }
+  throw new Error(response.statusText);
 }
 
-function compareRoles(role1: Role, role2: Role) {
-  return formatCourse(role1.name) === formatCourse(role2.name);
+export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
+  const query = interaction.options.getString('course').replace(/\s/g, '');
+  setContext('AUTOCOMPLETE', { query });
+  if (query.length < 4) {
+    await interaction.respond([{ name: 'Continue typing for auto suggestions...', value: '' }]);
+    return;
+  }
+  const courseList = await searchKuali(query);
+  await interaction.respond(courseList.map((c) => ({ name: `${c.code}: ${c.title}`, value: c.code })));
 }
 
-function isGradCourse(course: string) {
-  return /^(?:ece|cs)(5|6)\d+/.test(course);
+// at this point we assume that the class wasn't found so we need to check edge cases
+async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteraction) {
+  let results57: ICourse[] = [];
+  const courseList: Role[] = [];
+  const roles = interaction.guild.roles.cache;
+  if (/(5|6)7/.test(roleName)) {
+    results57 = (
+      await Promise.all([searchKuali(roleName.replace('57', '67')), searchKuali(roleName.replace('67', '57'))])
+    ).flat();
+  }
+  for (const result of results57) {
+    if (result.title.toLowerCase() === roleName.toLowerCase()) {
+      // Check if the grad course has a corresponding role
+      if (roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase())) {
+        courseList.push(roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase()));
+      }
+    }
+  }
+
+  const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
+  if (
+    crossListed.length &&
+    crossListed[0].jointlyOffered &&
+    crossListed[0].jointlyOffered[0].title == roleName &&
+    roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase())
+  ) {
+    courseList.push(roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase()));
+  }
+
+  return courseList;
 }
 
-function make5767(course: string) {
-  return course.replace(/([a-zA-Z]+)\s?(5|6)(\d+)/, (match, $1, $2, $3) => `${$1}${$2 == '5' ? `6${$3}` : `5${$3}`}`);
+export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
+  interaction.deferReply();
+  // Get autocomplete results for the course name
+  const selectedCourse = interaction.options.get('course', true);
+  const roleName = selectedCourse.value.toString();
+  // Check if the role for the selected course already exists
+  const role = interaction.guild?.roles.cache.find((r) => r.name === roleName);
+  const memberRoles = interaction.member.roles as GuildMemberRoleManager;
+  if (role) {
+    // If the role already exists, add the user to it
+    return memberRoles
+      .add(role)
+      .then(() => interaction.editReply(`You have been successfully enrolled in ${role.name}`));
+  } else {
+    const edgeCases = await checkEdgeCases(selectedCourse.value.toString(), interaction);
+    if (edgeCases.length) {
+      return memberRoles
+        .add(edgeCases[0])
+        .then(() => interaction.editReply(`you have been successfully enrolled in ${edgeCases[0].name}`));
+    }
+    // If the role does not exist, create it and add the user to it
+    return interaction.guild?.roles
+      .create({
+        name: roleName,
+        reason: `Enrolling user in ${roleName}`,
+      })
+      .then((createdRole) => {
+        memberRoles.add(createdRole);
+        interaction.guild.channels.create({
+          name: roleName,
+          type: ChannelType.GuildText,
+          // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
+          parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '936695108085096469' : '786279356225028177',
+          permissionOverwrites: [
+            {
+              id: interaction.guild.id,
+              deny: [PermissionsBitField.Flags.ViewChannel],
+            },
+            {
+              id: createdRole.id,
+              allow: [PermissionsBitField.Flags.ViewChannel],
+            },
+          ],
+        });
+      })
+      .then(() => interaction.editReply(`You have been successfully enrolled in ${role.name}`));
+  }
 }
 
-async function getExistingAndCrosslistedRoles(
-  roles: Collection<string, Role>,
-  existingCourses: string[],
-  nonExistingCourses: string[],
-) {
-  const overlaps = nonExistingCourses.map((r) =>
-    courseOverlaps(r).then((olap) => (olap ? formatCourse(changeDepartment(r)) : null)),
+export const command = new SlashCommandBuilder()
+  .setName('enroll')
+  .setDescription("Enroll in a course to get access to that course's channel")
+  .addStringOption((opt) =>
+    opt
+      .setName('course')
+      .setDescription('The name of the course you wish to enroll in')
+      .setAutocomplete(true)
+      .setRequired(true),
   );
-  return mergeArr(
-    existingCourses,
-    (await Promise.all(overlaps)).filter(exists).map<string>(courseIsRole(roles)).filter(exists),
-  );
-}
-
-function getGradCourses(roles: string[]): string[] {
-  return roles.filter((r) => isGradCourse(formatCourse(r))).map((r) => make5767(r));
-}
-
-export default command;

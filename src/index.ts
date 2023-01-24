@@ -4,23 +4,71 @@
 
 import { assert } from 'console';
 import 'core-js';
-import { Client } from 'discord.js';
-import execBehaviors from './behaviors/ta';
+import {
+  AutocompleteInteraction,
+  CacheType,
+  ChatInputCommandInteraction,
+  Client,
+  Events,
+  Interaction,
+} from 'discord.js';
 import connect from './utils/connect';
-import exec from './utils/exec';
-import courseOverlaps from './utils/helper/courseOverlaps';
+import * as Sentry from '@sentry/node';
+
 const bots: Map<symbol, Client> = new Map<symbol, Client>();
 const TAKey = Symbol('TA');
 const HelperKey = Symbol('HELPER');
 const ta = connect(TAKey, bots);
 const helper = connect(HelperKey, bots);
-assert(ta && helper);
-ta!.on('message', async (msg) => {
-  if (await exec(msg, ta!)) return;
-  execBehaviors(ta!, msg);
+
+const transaction = Sentry.startTransaction({
+  op: 'ECEBOT',
+  name: 'ECE BOT',
 });
 
-helper!.on('message', async (msg) => {
-  //saveMessage(msg, as);
-  if (await exec(msg, helper!)) return;
+assert(ta && helper);
+
+helper.on(Events.InteractionCreate, async (i) => {
+  let s = createSpan(i);
+  try {
+    if (i.isAutocomplete()) {
+      s = transaction.startChild({
+        op: 'AUTOCOMPLETE',
+        description: 'Auto Complete',
+      });
+      const interaction = i as AutocompleteInteraction;
+      await helper.commands.get(interaction.commandName).autoComplete(interaction);
+    } else if (i.isChatInputCommand()) {
+      s = transaction.startChild({
+        op: 'EXEC',
+        description: 'Executing Command',
+      });
+
+      const interaction = i as ChatInputCommandInteraction;
+      await helper.commands.get(interaction.commandName).execute(interaction);
+    }
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    if (s) {
+      console.log('Transaction Complete');
+      s.finish();
+    }
+  }
 });
+
+function createSpan(i: Interaction<CacheType>): Sentry.Span {
+  const s: Sentry.Span | null = null;
+  Sentry.setUser({ id: i.user.id, username: i.user.username });
+  Sentry.setContext(
+    'INTERACTION',
+    JSON.parse(
+      JSON.stringify(
+        i,
+        (_, v) => (typeof v === 'bigint' ? v.toString() : v), // return everything else unchanged
+      ),
+    ),
+  );
+
+  return s;
+}
