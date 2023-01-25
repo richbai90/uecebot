@@ -134,7 +134,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   // Get autocomplete results for the course name
   const selectedCourse = interaction.options.get('course', true);
   const roleName = normalizeRoleName(selectedCourse.value.toString());
-  if (!/^(?:ece|cs)\d+$/.test(roleName)) {
+  if (!/^(?:ECE|CS) \d+$/.test(roleName)) {
     interaction.editReply(`you must select an option from the list provided by the enroll command`);
     return;
   }
