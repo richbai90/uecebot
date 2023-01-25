@@ -1,14 +1,12 @@
-import { setContext } from '@sentry/node';
+import { addBreadcrumb, captureEvent, captureMessage, setContext } from '@sentry/node';
 import {
   AutocompleteInteraction,
   ChannelType,
   ChatInputCommandInteraction,
-  Guild,
   GuildMemberRoleManager,
   Message,
   PermissionsBitField,
   Role,
-  RoleManager,
   SlashCommandBuilder,
 } from 'discord.js';
 import fetch from 'node-fetch';
@@ -76,7 +74,7 @@ async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
   const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid}`);
   if (response.ok) {
     const data = await response.json();
-    return [data]
+    return [data];
   }
   throw new Error(response.statusText);
 }
@@ -109,16 +107,27 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
         courseList.push(roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase()));
       }
     }
-  }
 
-  const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
-  if (
-    crossListed.length &&
-    crossListed[0].jointlyOffered &&
-    crossListed[0].jointlyOffered[0].title == roleName &&
-    roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase())
-  ) {
-    courseList.push(roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase()));
+    const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
+    if (
+      crossListed.length &&
+      crossListed[0].jointlyOffered &&
+      crossListed[0].jointlyOffered[0].title == roleName &&
+      roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase())
+    ) {
+      courseList.push(roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase()));
+    }
+
+    addBreadcrumb({
+      level: 'info',
+      data: {
+        roleName,
+        results57,
+        courseList,
+        crossListed,
+      },
+      message: 'checking edge cases',
+    });
   }
 
   return courseList;
@@ -153,6 +162,11 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         .add(edgeCases[0])
         .then(() => interaction.editReply(`you have been successfully enrolled in ${edgeCases[0].name}`));
     }
+    // It is useful to know if a role is being created as it may result in a bug if edge cases haven't been handled directly
+    captureEvent({
+      message: 'Creating Role',
+      level: 'info',
+    });
     // If the role does not exist, create it and add the user to it
     return interaction.guild?.roles
       .create({
