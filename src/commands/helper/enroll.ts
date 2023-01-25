@@ -124,11 +124,24 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   return courseList;
 }
 
+function deNormalizeRoleName(roleName: string) {
+  const rx = /[^0-9](?=[0-9])/g;
+  return roleName.replace(rx, ' ').toUpperCase();
+}
+
+function normalizeRoleName(roleName: string) {
+  return roleName.toLowerCase().replace(' ', '');
+}
+
 export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
   await interaction.deferReply();
   // Get autocomplete results for the course name
   const selectedCourse = interaction.options.get('course', true);
-  const roleName = selectedCourse.value.toString();
+  const roleName = normalizeRoleName(selectedCourse.value.toString());
+  if (!/^(?:ece|cs)\d+$/.test(roleName)) {
+    interaction.editReply(`you must select an option from the list provided by the enroll command`);
+    return;
+  }
   // Check if the role for the selected course already exists
   const role = interaction.guild?.roles.cache.find((r) => r.name === roleName);
   const memberRoles = interaction.member.roles as GuildMemberRoleManager;
@@ -153,7 +166,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .then((createdRole) => {
         memberRoles.add(createdRole);
         interaction.guild.channels.create({
-          name: roleName,
+          name: deNormalizeRoleName(roleName),
           type: ChannelType.GuildText,
           // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
           parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '936695108085096469' : '786279356225028177',
