@@ -92,6 +92,14 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
 
 // at this point we assume that the class wasn't found so we need to check edge cases
 async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteraction) {
+  addBreadcrumb({
+    level: 'info',
+    data: {
+      roleName,
+    },
+    message: 'checking edge cases',
+    type: 'message',
+  });
   let results57: ICourse[] = [];
   const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
@@ -126,7 +134,8 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
         courseList,
         crossListed,
       },
-      message: 'checking edge cases',
+      message: 'Returning Edge Case Results',
+      type: 'message',
     });
   }
 
