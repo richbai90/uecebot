@@ -100,16 +100,22 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
     message: 'Checking edge cases',
     type: 'message',
   });
-  let results57: ICourse[] = [];
+  let permutations: ICourse[] = [];
   const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
-  if (/\s(5|6)/.test(roleName)) {
-    results57 = (
-      await Promise.all([searchKuali(roleName.replace('57', '67')), searchKuali(roleName.replace('67', '57'))])
-    ).flat();
-  }
+  // search all permutations of the course
+  permutations = (
+    await Promise.all([
+      searchKuali(roleName.replace('57', '67')),
+      searchKuali(roleName.replace('57', '67').replace('CS', 'ECE')),
+      searchKuali(roleName.replace('57', '67').replace('ECE', 'CS')),
+      searchKuali(roleName.replace('67', '57')),
+      searchKuali(roleName.replace('67', '57').replace('CS', 'ECE')),
+      searchKuali(roleName.replace('67', '57').replace('ECE', 'CS')),
+    ])
+  ).flat();
 
-  for (const result of results57) {
+  for (const result of permutations) {
     if (result.title.toLowerCase() === roleName.toLowerCase()) {
       // Check if the grad course has a corresponding role
       if (roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase())) {
@@ -131,7 +137,7 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
       level: 'info',
       data: {
         roleName,
-        results57,
+        results57: permutations,
         courseList,
         crossListed,
       },
