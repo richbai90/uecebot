@@ -127,7 +127,7 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
 }
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
-  interaction.deferReply();
+  await interaction.deferReply();
   // Get autocomplete results for the course name
   const selectedCourse = interaction.options.get('course', true);
   const roleName = selectedCourse.value.toString();
