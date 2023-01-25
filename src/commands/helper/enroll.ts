@@ -59,7 +59,7 @@ interface ICourseDetails extends ICourse {
 
 async function searchKuali(query: string): Promise<ICourse[]> {
   const response = await fetch(
-    `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query}&limit=6`,
+    `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query.replace(/\s/g, '')}&limit=6`,
   );
   if (response.ok) {
     const data = await response.json();
@@ -71,7 +71,9 @@ async function searchKuali(query: string): Promise<ICourse[]> {
 }
 
 async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
-  const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid}`);
+  const response = await fetch(
+    `https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid.replace(/\s/g, '')}`,
+  );
   if (response.ok) {
     const data = await response.json();
     return [data];
@@ -80,9 +82,9 @@ async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
 }
 
 export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
-  const query = interaction.options.getString('course').replace(/\s/g, '');
+  const query = interaction.options.getString('course');
   setContext('AUTOCOMPLETE', { query });
-  if (query.length < 4) {
+  if (query.length < 5) {
     await interaction.respond([{ name: 'Continue typing for auto suggestions...', value: '' }]);
     return;
   }
