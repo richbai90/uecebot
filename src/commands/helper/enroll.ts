@@ -124,13 +124,9 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   return courseList;
 }
 
-function deNormalizeRoleName(roleName: string) {
+function normalizeRoleName(roleName: string) {
   const rx = /[^0-9](?=[0-9])/g;
   return roleName.replace(rx, ' ').toUpperCase();
-}
-
-function normalizeRoleName(roleName: string) {
-  return roleName.toLowerCase().replace(' ', '');
 }
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
@@ -166,7 +162,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .then((createdRole) => {
         memberRoles.add(createdRole);
         interaction.guild.channels.create({
-          name: deNormalizeRoleName(roleName),
+          name: normalizeRoleName(roleName),
           type: ChannelType.GuildText,
           // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
           parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '936695108085096469' : '786279356225028177',
