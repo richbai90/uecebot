@@ -106,22 +106,20 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
   // search all permutations of the course
-  permutations = (
-    await Promise.all([
-      searchKuali(roleName.replace('57', '67')),
-      searchKuali(roleName.replace('57', '67').replace('CS', 'ECE')),
-      searchKuali(roleName.replace('57', '67').replace('ECE', 'CS')),
-      searchKuali(roleName.replace('67', '57')),
-      searchKuali(roleName.replace('67', '57').replace('CS', 'ECE')),
-      searchKuali(roleName.replace('67', '57').replace('ECE', 'CS')),
-    ])
-  ).flat();
-
-  for (const result of permutations) {
-    if (result.title.toLowerCase() === roleName.toLowerCase()) {
-      // Check if the grad course has a corresponding role
-      if (roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase())) {
-        courseList.push(roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase()));
+  let gradRole: string;
+  if (/\s5/.test(roleName)) {
+    gradRole = roleName.replace(/\s5/, '6');
+  } else if (/\s6/.test(roleName)) {
+    gradRole = roleName.replace(/\s6/, '5');
+  }
+  if (gradRole) {
+    permutations = await searchKuali(gradRole);
+    for (const result of permutations) {
+      if (result.title.toLowerCase() === roleName.toLowerCase()) {
+        // Check if the grad course has a corresponding role
+        if (roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase())) {
+          courseList.push(roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase()));
+        }
       }
     }
 
