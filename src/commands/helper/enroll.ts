@@ -103,11 +103,12 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   let results57: ICourse[] = [];
   const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
-  if (/(5|6)7/.test(roleName)) {
+  if (/\s(5|6)/.test(roleName)) {
     results57 = (
       await Promise.all([searchKuali(roleName.replace('57', '67')), searchKuali(roleName.replace('67', '57'))])
     ).flat();
   }
+
   for (const result of results57) {
     if (result.title.toLowerCase() === roleName.toLowerCase()) {
       // Check if the grad course has a corresponding role
