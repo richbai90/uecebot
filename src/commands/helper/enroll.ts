@@ -73,7 +73,7 @@ async function searchKuali(query: string): Promise<ICourse[]> {
 }
 
 async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
-  const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/${pid}`);
+  const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid}`);
   if (response.ok) {
     const data = await response.json();
     return data.filter(
