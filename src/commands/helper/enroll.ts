@@ -15,6 +15,7 @@ interface ICourse {
   id: string;
   pid: string;
   title: string;
+  __catalogCourseId: string;
   description: string;
   code: string;
   subjectCode: {
@@ -115,10 +116,12 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   if (gradRole) {
     permutations = await searchKuali(gradRole);
     for (const result of permutations) {
-      if (result.title.toLowerCase() === roleName.toLowerCase()) {
+      if (result.__catalogCourseId.toLowerCase() === roleName.toLowerCase().replace(/\s/g, '')) {
         // Check if the grad course has a corresponding role
-        if (roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase())) {
-          courseList.push(roles.find((r) => r.name.toLowerCase() === result.title.toLowerCase()));
+        if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === result.__catalogCourseId.toLowerCase())) {
+          courseList.push(
+            roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === result.__catalogCourseId.toLowerCase()),
+          );
         }
       }
     }
