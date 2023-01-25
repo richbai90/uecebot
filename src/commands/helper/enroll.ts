@@ -76,9 +76,7 @@ async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
   const response = await fetch(`https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid}`);
   if (response.ok) {
     const data = await response.json();
-    return data.filter(
-      (c: any) => c.subjectCode.name.toUpperCase() === 'CS' || c.subjectCode.name.toUpperCase() === 'ECE',
-    );
+    return [data]
   }
   throw new Error(response.statusText);
 }
@@ -170,8 +168,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
             },
           ],
         });
+        return createdRole;
       })
-      .then(() => interaction.editReply(`You have been successfully enrolled in ${role.name}`));
+      .then((createdRole) => interaction.editReply(`You have been successfully enrolled in ${createdRole.name}`));
   }
 }
 
