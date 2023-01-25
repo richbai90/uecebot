@@ -97,7 +97,7 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
     data: {
       roleName,
     },
-    message: 'checking edge cases',
+    message: 'Checking edge cases',
     type: 'message',
   });
   let results57: ICourse[] = [];
