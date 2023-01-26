@@ -15,7 +15,6 @@ interface ICourse {
   id: string;
   pid: string;
   title: string;
-  __catalogCourseId: string;
   description: string;
   code: string;
   subjectCode: {
@@ -103,7 +102,8 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
     message: 'Checking edge cases',
     type: 'message',
   });
-  let permutations: ICourse[] = [];
+  let permutation: ICourse[] = [];
+  let roleNameCourse: ICourse[] = [];
   const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
   // search all permutations of the course
@@ -114,41 +114,42 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
     gradRole = roleName.replace(/\s6/, '5');
   }
   if (gradRole) {
-    permutations = await searchKuali(gradRole);
-    for (const result of permutations) {
-      if (result.__catalogCourseId.toLowerCase() === roleName.toLowerCase().replace(/\s/g, '')) {
-        // Check if the grad course has a corresponding role
-        if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === result.__catalogCourseId.toLowerCase())) {
-          courseList.push(
-            roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === result.__catalogCourseId.toLowerCase()),
-          );
-        }
+    permutation = await searchKuali(gradRole);
+    roleNameCourse = await searchKuali(roleName);
+    if (permutation[0].title === roleNameCourse[0].title) {
+      // Check if the grad course has a corresponding role
+      if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase())) {
+        courseList.push(
+          roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase()),
+        );
       }
     }
-
-    const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
-    if (
-      crossListed.length &&
-      crossListed[0].jointlyOffered &&
-      crossListed[0].jointlyOffered[0].title == roleName &&
-      roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase())
-    ) {
-      courseList.push(roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].title.toLowerCase()));
-    }
-
-    addBreadcrumb({
-      level: 'info',
-      data: {
-        roleName,
-        results57: permutations,
-        courseList,
-        crossListed,
-      },
-      message: 'Returning Edge Case Results',
-      type: 'message',
-    });
+    return courseList;
   }
 
+  const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
+  if (
+    crossListed.length &&
+    crossListed[0].jointlyOffered &&
+    crossListed[0].jointlyOffered[0].title == roleName &&
+    roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].__catalogCourseId.toLowerCase())
+  ) {
+    courseList.push(
+      roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].__catalogCourseId.toLowerCase()),
+    );
+  }
+
+  addBreadcrumb({
+    level: 'info',
+    data: {
+      roleName,
+      results57: permutation,
+      courseList,
+      crossListed,
+    },
+    message: 'Returning Edge Case Results',
+    type: 'message',
+  });
   return courseList;
 }
 
