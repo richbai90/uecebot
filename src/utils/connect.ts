@@ -55,6 +55,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
     }
 
     cache.set(key, bot);
+    transaction.finish();
     return bot;
   }
 }
