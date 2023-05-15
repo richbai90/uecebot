@@ -1,7 +1,9 @@
 import { Client, Collection, Events, GatewayIntentBits as Intents, REST, Routes } from 'discord.js';
 import { ICommand } from '../types/Command';
 import * as enroll from '../commands/helper/enroll';
-
+import * as drop from '../commands/helper/drop';
+//import * as declare from '../commands/helper/declare'; TODO: Add the commands and exports
+//import * as help from '../commands/helper/help'; TODO: Add the commands and exports
 interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
 }
@@ -39,8 +41,8 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
   if (key.description === 'HELPER') {
     bot.commands.set('enroll', enroll);
     bot.commands.set('drop', drop);
-    bot.commands.set('declare', declare);
-    bot.commands.set('help', help);
+    //bot.commands.set('declare', declare);
+    //bot.commands.set('help', help);
   }
 
   cache.set(key, bot);

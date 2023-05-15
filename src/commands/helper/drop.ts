@@ -31,7 +31,7 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
   await interaction.respond(courses.map((c) => ({ name: c, value: c })));
 }
 
-export async function execexecute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
   await interaction.deferReply();
   const classes = interaction.options.get('course', true).value.toString().split(/,\s*/);
   const roles = await interaction.guild?.roles.fetch();
