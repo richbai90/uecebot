@@ -13,19 +13,17 @@ export const command = new SlashCommandBuilder()
   .addStringOption((opt) =>
     opt
       .setName('course')
-      .setDescription(
-        'The name of the course(s) you wish to drop. Separate classes with a comma. If you want to drop all classes, use "all"',
-      )
+      .setDescription('The the course(s) you wish to drop. Comma separated.')
       .setAutocomplete(true)
       .setRequired(true),
   );
 
 export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
-  const classes = await interaction.guild?.roles.fetch();
+  const classes = ((await interaction.member?.roles) as GuildMemberRoleManager).cache;
   assert(classes);
   const course = interaction.options.getString('course')?.toLowerCase();
   const courses = classes
-    .filter((c) => c.name.toLowerCase().includes(course!))
+    .filter((c) => c.name.toLowerCase().includes(course!) && c.name.toLowerCase().split(/ece|cs/).length > 1)
     .map((c) => c.name)
     .sort();
   await interaction.respond(courses.map((c) => ({ name: c, value: c })));
@@ -58,5 +56,5 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       )}. Please reach out to a moderator to get these channels removed.`,
     );
   }
-  return interaction.editReply(`<@${member?.user}>: You have been removed from the requested classes.`);
+  return interaction.editReply(`${member?.user}: You have been removed from the requested classes.`);
 }

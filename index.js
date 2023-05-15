@@ -7,7 +7,7 @@ try {
   require('./dist/lib/index.js');
 } catch (err) {
   console.log(err);
-  transaction.captureException(err);
+  Sentry.captureException(err);
 } finally {
   transaction.finish();
 }
