@@ -38,6 +38,9 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
   });
   if (key.description === 'HELPER') {
     bot.commands.set('enroll', enroll);
+    bot.commands.set('drop', drop);
+    bot.commands.set('declare', declare);
+    bot.commands.set('help', help);
   }
 
   cache.set(key, bot);
