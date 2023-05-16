@@ -116,15 +116,17 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   if (gradRole) {
     permutation = await searchKuali(gradRole);
     roleNameCourse = await searchKuali(roleName);
-    if (permutation[0].title === roleNameCourse[0].title) {
-      // Check if the grad course has a corresponding role
-      if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase())) {
-        courseList.push(
-          roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase()),
-        );
+    if (permutation.length && roleNameCourse.length) {
+      if (permutation[0].title === roleNameCourse[0].title) {
+        // Check if the grad course has a corresponding role
+        if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase())) {
+          courseList.push(
+            roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase()),
+          );
+        }
       }
+      return courseList;
     }
-    return courseList;
   }
 
   const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
