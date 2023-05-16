@@ -1,3 +1,2 @@
-// TODO: Add the commands and exports
-export { default as declare } from './declare';
+// TODO: Add the commands and exports here
 export { default as cleanup_semester } from './cleanup';

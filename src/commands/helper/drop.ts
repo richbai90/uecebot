@@ -23,7 +23,7 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
   assert(classes);
   const course = interaction.options.getString('course')?.toLowerCase();
   const courses = classes
-    .filter((c) => c.name.toLowerCase().includes(course!) && c.name.toLowerCase().split(/ece|cs/).length > 1)
+    .filter((c) => c.name.toLowerCase().includes(course) && c.name.toLowerCase().split(/ece|cs/).length > 1)
     .map((c) => c.name)
     .sort();
   await interaction.respond(courses.map((c) => ({ name: c, value: c })));
@@ -40,9 +40,9 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       s.then((a) => a.push(c));
       return s;
     }
-    const role = roles!.find((r) => c.toLowerCase().replace(/\s*/g, '') === r.name.toLowerCase().replace(/\s*/g, ''));
+    const role = roles.find((r) => c.toLowerCase().replace(/\s*/g, '') === r.name.toLowerCase().replace(/\s*/g, ''));
     if (role) {
-      await ((member!.roles as unknown) as GuildMemberRoleManager).remove(role);
+      await ((member.roles as unknown) as GuildMemberRoleManager).remove(role);
     } else {
       s.then((a) => a.push(c));
     }
