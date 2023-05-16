@@ -3,7 +3,7 @@ import { ICommand } from '../types/Command';
 import * as enroll from '../commands/helper/enroll';
 import * as drop from '../commands/helper/drop';
 import * as Sentry from '@sentry/node';
-//import * as declare from '../commands/helper/declare'; TODO: Add the commands and exports
+import * as declare from '../commands/helper/declare';
 //import * as help from '../commands/helper/help'; TODO: Add the commands and exports
 interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
@@ -50,7 +50,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
     if (key.description === 'HELPER') {
       bot.commands.set('enroll', enroll);
       bot.commands.set('drop', drop);
-      //bot.commands.set('declare', declare);
+      bot.commands.set('declare', declare);
       //bot.commands.set('help', help);
     }
 
