@@ -45,6 +45,8 @@ helper.on(Events.InteractionCreate, async (i) => {
       });
 
       const interaction = i as ChatInputCommandInteraction;
+      console.log(interaction.commandName);
+      console.log(helper.commands.keys());
       await helper.commands.get(interaction.commandName).execute(interaction);
     }
   } catch (e) {
