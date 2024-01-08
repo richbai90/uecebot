@@ -92,6 +92,11 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
   await interaction.respond(courseList.map((c) => ({ name: `${c.code}: ${c.title}`, value: c.code })));
 }
 
+function isGradRole(roleName: string) {
+  const roleNumber = parseInt(roleName.replace(/[^0-9]/g, ''));
+  return roleNumber >= 5000;
+}
+
 // at this point we assume that the class wasn't found so we need to check edge cases
 async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteraction) {
   addBreadcrumb({
@@ -108,10 +113,10 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
   const roles = interaction.guild.roles.cache;
   // search all permutations of the course
   let gradRole: string;
-  if (/\s5/.test(roleName)) {
-    gradRole = roleName.replace(/\s5/, '6');
-  } else if (/\s6/.test(roleName)) {
-    gradRole = roleName.replace(/\s6/, '5');
+  if (isGradRole(roleName) && /\s?5/.test(roleName)) {
+    gradRole = roleName.replace(/\s?5/, '6');
+  } else if (isGradRole && /\s?6/.test(roleName)) {
+    gradRole = roleName.replace(/\s>6/, '5');
   }
   if (gradRole) {
     permutation = await searchKuali(gradRole);
@@ -160,6 +165,7 @@ function normalizeRoleName(roleName: string) {
   return roleName.replace(rx, ' ').toUpperCase();
 }
 
+
 export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
   await interaction.deferReply();
   // Get autocomplete results for the course name
@@ -201,7 +207,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
           name: normalizeRoleName(roleName),
           type: ChannelType.GuildText,
           // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
-          parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '936695108085096469' : '786279356225028177',
+          parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '1193985624630370334' : '1193986075002142831',
           permissionOverwrites: [
             {
               id: interaction.guild.id,
@@ -212,6 +218,12 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
               allow: [PermissionsBitField.Flags.ViewChannel],
             },
           ],
+        }).catch((err) => {
+          // if there was an error check if it was because we have reached the max number of channels
+          if (/Maximum number of channels reached/.test(err.message)) {
+            captureMessage('Maximum number of channels reached');
+          }
+            throw err; // for now we will just throw the error and let the user know that the class was not created
         });
         return createdRole;
       })
