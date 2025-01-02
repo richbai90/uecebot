@@ -10,11 +10,6 @@ interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
 }
 
-const transaction = Sentry.startTransaction({
-  op: 'CONNECT',
-  name: 'Connecting to Discord',
-});
-
 export default function (key: symbol, cache: Map<symbol, Client>): IBot {
   if (!key.description) return;
   const bot = new Client({
@@ -57,7 +52,6 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
     }
 
     cache.set(key, bot);
-    transaction.finish();
     return bot;
   }
 }

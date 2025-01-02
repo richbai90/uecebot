@@ -55,9 +55,9 @@
     }
   },
   "dependencies": {
-    "@sentry/integrations": "^7.32.1",
-    "@sentry/node": "^7.32.1",
-    "@sentry/tracing": "^7.32.1",
+    "@sentry/integrations": "^7.120.2",
+    "@sentry/node": "^8.47.0",
+    "@sentry/tracing": "^7.120.2",
     "cas-authentication": "^0.0.8",
     "core-js": "^3.12.1",
     "discord.js": "^14.7.1",
@@ -95,6 +95,7 @@
     "eslint-plugin-react": "^7.22.0",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
+    "prettier-eslint": "^16.3.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",

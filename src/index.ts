@@ -11,9 +11,13 @@ import {
   Client,
   Events,
   Interaction,
+  PartialUser,
+  User,
 } from 'discord.js';
 import connect from './utils/connect';
+import { parseJson } from './utils/safely';
 import * as Sentry from '@sentry/node';
+import { addRole, rmRole } from './behaviors/helper/club_react';
 
 const bots: Map<symbol, Client> = new Map<symbol, Client>();
 const TAKey = Symbol('TA');
@@ -21,25 +25,20 @@ const HelperKey = Symbol('HELPER');
 const ta = connect(TAKey, bots);
 const helper = connect(HelperKey, bots);
 
-const transaction = Sentry.startTransaction({
-  op: 'ECEBOT',
-  name: 'ECE BOT',
-});
-
 assert(ta && helper);
 
 helper.on(Events.InteractionCreate, async (i) => {
-  let s = createSpan(i);
+  let s = createSpan(i.user, i);
   try {
     if (i.isAutocomplete()) {
-      s = transaction.startChild({
+      s = s.setAttributes({
         op: 'AUTOCOMPLETE',
         description: 'Auto Complete',
       });
       const interaction = i as AutocompleteInteraction;
       await helper.commands.get(interaction.commandName).autoComplete(interaction);
     } else if (i.isChatInputCommand()) {
-      s = transaction.startChild({
+      s.setAttributes({
         op: 'EXEC',
         description: 'Executing Command',
       });
@@ -54,23 +53,36 @@ helper.on(Events.InteractionCreate, async (i) => {
   } finally {
     if (s) {
       console.log('Transaction Complete');
-      s.finish();
+      s.end(Date.now());
     }
   }
 });
 
-function createSpan(i: Interaction<CacheType>): Sentry.Span {
+helper.on(Events.MessageReactionAdd, async (reaction, user) => {
+  const span = createSpan(user, null, reaction);
+  try {
+    await addRole(reaction, user);
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    span?.end(Date.now());
+  }
+});
+
+helper.on(Events.MessageReactionRemove, async (reaction, user) => {
+  const span = createSpan(user, null, reaction);
+  await rmRole(reaction, user);
+});
+
+function createSpan(user: User | PartialUser, i: Interaction<CacheType> | null, extra?: unknown): Sentry.Span {
   const s: Sentry.Span | null = null;
-  Sentry.setUser({ id: i.user.id, username: i.user.username });
-  Sentry.setContext(
-    'INTERACTION',
-    JSON.parse(
-      JSON.stringify(
-        i,
-        (_, v) => (typeof v === 'bigint' ? v.toString() : v), // return everything else unchanged
-      ),
-    ),
-  );
+  Sentry.setUser(JSON.parse(JSON.stringify(user)));
+  const safeExtra = parseJson(extra);
+  if (i) {
+    Sentry.setContext('INTERACTION', { ...parseJson(i), ...safeExtra });
+  } else {
+    Sentry.setContext((safeExtra?.context || 'UNKNOWN') as string, safeExtra);
+  }
 
   return s;
 }
