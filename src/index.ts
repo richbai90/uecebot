@@ -28,7 +28,7 @@ const helper = connect(HelperKey, bots);
 assert(ta && helper);
 
 helper.on(Events.InteractionCreate, async (i) => {
-  let s = createSpan(i.user, i);
+  let s = createSpan('InteractionCreate', i.user, i);
   try {
     if (i.isAutocomplete()) {
       s = s.setAttributes({
@@ -59,7 +59,7 @@ helper.on(Events.InteractionCreate, async (i) => {
 });
 
 helper.on(Events.MessageReactionAdd, async (reaction, user) => {
-  const span = createSpan(user, null, reaction);
+  const span = createSpan('MessageReactionAdd', user, null, reaction);
   try {
     await addRole(reaction, user);
   } catch (e) {
@@ -70,18 +70,25 @@ helper.on(Events.MessageReactionAdd, async (reaction, user) => {
 });
 
 helper.on(Events.MessageReactionRemove, async (reaction, user) => {
-  const span = createSpan(user, null, reaction);
+  const span = createSpan('MessageReactionRemove', user, null, reaction);
   await rmRole(reaction, user);
 });
 
-function createSpan(user: User | PartialUser, i: Interaction<CacheType> | null, extra?: unknown): Sentry.Span {
-  const s: Sentry.Span | null = null;
+function createSpan(
+  name: string,
+  user: User | PartialUser,
+  i: Interaction<CacheType> | null,
+  extra?: unknown,
+): Sentry.Span {
   Sentry.setUser(JSON.parse(JSON.stringify(user)));
+  const s = Sentry.startInactiveSpan({
+    name,
+  });
   const safeExtra = parseJson(extra);
   if (i) {
-    Sentry.setContext('INTERACTION', { ...parseJson(i), ...safeExtra });
+    s.setAttributes({ kind: 'INTERACTION', ...parseJson(i), ...safeExtra });
   } else {
-    Sentry.setContext((safeExtra?.context || 'UNKNOWN') as string, safeExtra);
+    s.setAttributes({ kind: safeExtra?.context || 'UNKNOWN', ...safeExtra });
   }
 
   return s;
