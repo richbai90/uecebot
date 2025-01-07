@@ -16,7 +16,7 @@ function searchKuali(query: string): IClass[] {
   // const response = await fetch(
   //   `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query.replace(/\s/g, '')}&limit=6`,
   // );
-  return Array.from(global.CLASS_LIST);
+  return Array.from(global.CLASS_LIST).filter(({ name }) => RegExp(query).test(name));
 }
 
 export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
@@ -27,6 +27,7 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
     return;
   }
   const courseList = searchKuali(query);
+  console.log(courseList);
   await interaction.respond(courseList.map((c) => ({ name: `${c.name}`, value: c.code })));
 }
 

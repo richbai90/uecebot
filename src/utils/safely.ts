@@ -1,6 +1,7 @@
 import { AsyncFn } from '../types/UtilityTypes';
 
 export function parseJson(o: unknown): Record<string, string> {
+  if (!o) o = {};
   return JSON.parse(
     JSON.stringify(
       o,

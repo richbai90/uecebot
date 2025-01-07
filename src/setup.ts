@@ -1,30 +1,11 @@
-import * as Sentry from '@sentry/node';
 import '@sentry/tracing';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import { forEach } from 'ramda';
 import PropertySet from './utils/PropertySet';
 import { IClass } from './types/IClass';
 
-require('dotenv').config(); // eslint-disable-line
-const { assert } = console;
-console.assert = function (cond: boolean, text: string, dontThrow: boolean) {
-  assert(cond);
-  if (!cond) {
-    if (dontThrow) debugger;
-    throw new Error(text || 'Assertion Failed');
-  }
-};
-
-Sentry.init({
-  dsn: 'https://773b12dfa0d5486e8f17984a436cc32c@o4504557293469696.ingest.sentry.io/4504557296549888',
-  integrations: [
-    Sentry.rewriteFramesIntegration({
-      root: global.__rootdir__,
-    }),
-  ],
-});
-
-try {
+export async function setup(): Promise<void> {
+  require('dotenv').config(); // eslint-disable-line
   const classes = await (async () => {
     try {
       // Fetch the webpage with headers to make it more browser-like
@@ -57,6 +38,7 @@ try {
         .map((_, card) => {
           const name = $(card)
             .find('h3')
+            .first()
             ?.text()
             .split('\n')
             ?.join(' ')
@@ -98,8 +80,6 @@ try {
     }
   })();
   global.CLASS_LIST = classes;
-} catch (error) {
-  console.warn('Failed to scrape classes.', error);
 }
 
 declare global {
