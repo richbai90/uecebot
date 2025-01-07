@@ -10,75 +10,13 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import fetch from 'node-fetch';
+import { IClass } from '../../types/IClass';
 
-interface ICourse {
-  id: string;
-  pid: string;
-  title: string;
-  description: string;
-  code: string;
-  subjectCode: {
-    id: string;
-    name: string;
-    description: string;
-    linkedGroup: string;
-  };
-  number: string;
-  type: string;
-}
-
-interface ICourseDetails extends ICourse {
-  jointlyOffered?: [
-    {
-      __catalogCourseId: string;
-      pid: string;
-      title: string;
-    },
-  ];
-  designationDescription?: string;
-  __passedCatalogQuery?: boolean;
-  courseRules?: string;
-  component?: [
-    {
-      name: string;
-      id: string;
-    },
-  ];
-  credits?: {
-    credits: {
-      min: string;
-      max: string;
-    };
-    value: string;
-    chosen: string;
-  };
-  dateStart?: string;
-  catalogActivationDate?: string;
-  _score?: number;
-}
-
-async function searchKuali(query: string): Promise<ICourse[]> {
-  const response = await fetch(
-    `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query.replace(/\s/g, '')}&limit=6`,
-  );
-  if (response.ok) {
-    const data = await response.json();
-    return data
-      .filter((c: any) => c.subjectCode.name.toUpperCase() === 'CS' || c.subjectCode.name.toUpperCase() === 'ECE')
-      .map((c: any) => ({ ...c, code: c.code.replace(/([A-Z])(\d)/, '$1 $2') }));
-  }
-  throw new Error(response.statusText);
-}
-
-async function kualiLookup(pid: string): Promise<ICourseDetails[]> {
-  const response = await fetch(
-    `https://utah.kuali.co/api/v1/catalog/course/6000afce403c68001bca5f0b/${pid.replace(/\s/g, '')}`,
-  );
-  if (response.ok) {
-    const data = await response.json();
-    return [data];
-  }
-  throw new Error(response.statusText);
+function searchKuali(query: string): IClass[] {
+  // const response = await fetch(
+  //   `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query.replace(/\s/g, '')}&limit=6`,
+  // );
+  return Array.from(global.CLASS_LIST);
 }
 
 export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
@@ -88,8 +26,8 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
     await interaction.respond([{ name: 'Continue typing for auto suggestions...', value: '' }]);
     return;
   }
-  const courseList = await searchKuali(query);
-  await interaction.respond(courseList.map((c) => ({ name: `${c.code}: ${c.title}`, value: c.code })));
+  const courseList = searchKuali(query);
+  await interaction.respond(courseList.map((c) => ({ name: `${c.name}`, value: c.code })));
 }
 
 function isGradRole(roleName: string) {
@@ -98,7 +36,7 @@ function isGradRole(roleName: string) {
 }
 
 // at this point we assume that the class wasn't found so we need to check edge cases
-async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteraction) {
+function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteraction) {
   addBreadcrumb({
     level: 'info',
     data: {
@@ -107,50 +45,17 @@ async function checkEdgeCases(roleName: string, interaction: ChatInputCommandInt
     message: 'Checking edge cases',
     type: 'message',
   });
-  let permutation: ICourse[] = [];
-  let roleNameCourse: ICourse[] = [];
-  const courseList: Role[] = [];
   const roles = interaction.guild.roles.cache;
-  // search all permutations of the course
-  let gradRole: string;
-  if (isGradRole(roleName) && /\s?5/.test(roleName)) {
-    gradRole = roleName.replace(/\s?5/, '6');
-  } else if (isGradRole && /\s?6/.test(roleName)) {
-    gradRole = roleName.replace(/\s>6/, '5');
-  }
-  if (gradRole) {
-    permutation = await searchKuali(gradRole);
-    roleNameCourse = await searchKuali(roleName);
-    if (permutation.length && roleNameCourse.length) {
-      if (permutation[0].title === roleNameCourse[0].title) {
-        // Check if the grad course has a corresponding role
-        if (roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase())) {
-          courseList.push(
-            roles.find((r) => r.name.toLowerCase().replace(/s/g, '') === permutation[0].code.toLowerCase()),
-          );
-        }
-      }
-      return courseList;
-    }
-  }
-
-  const crossListed = await kualiLookup((await searchKuali(roleName))[0].pid);
-  if (
-    crossListed.length &&
-    crossListed[0].jointlyOffered &&
-    crossListed[0].jointlyOffered[0].title == roleName &&
-    roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].__catalogCourseId.toLowerCase())
-  ) {
-    courseList.push(
-      roles.find((r) => r.name.toLowerCase() == crossListed[0].jointlyOffered[0].__catalogCourseId.toLowerCase()),
-    );
-  }
+  // check if the role is cross listed
+  const crossListed = searchKuali(roleName).reduce((pv, nv) => [...pv, ...nv.crossListed], []);
+  const courseList = crossListed.map((course) =>
+    roles.find((r, key, c) => r.name.toUpperCase() == course.split(' ').slice(0, -1).join(' ').toUpperCase()),
+  );
 
   addBreadcrumb({
     level: 'info',
     data: {
       roleName,
-      results57: permutation,
       courseList,
       crossListed,
     },
@@ -164,7 +69,6 @@ function normalizeRoleName(roleName: string) {
   const rx = /[^0-9](?=[0-9])/g;
   return roleName.replace(rx, ' ').toUpperCase();
 }
-
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<Message<boolean>> {
   await interaction.deferReply();
@@ -184,7 +88,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       .add(role)
       .then(() => interaction.editReply(`You have been successfully enrolled in ${role.name}`));
   } else {
-    const edgeCases = await checkEdgeCases(selectedCourse.value.toString(), interaction);
+    const edgeCases = checkEdgeCases(selectedCourse.value.toString(), interaction);
     if (edgeCases.length) {
       return memberRoles
         .add(edgeCases[0])
@@ -203,28 +107,30 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
       })
       .then((createdRole) => {
         memberRoles.add(createdRole);
-        interaction.guild.channels.create({
-          name: normalizeRoleName(roleName),
-          type: ChannelType.GuildText,
-          // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
-          parent: parseInt(roleName.replace(/[^0-9]/g, '')) > 5000 ? '1193985624630370334' : '1193986075002142831',
-          permissionOverwrites: [
-            {
-              id: interaction.guild.id,
-              deny: [PermissionsBitField.Flags.ViewChannel],
-            },
-            {
-              id: createdRole.id,
-              allow: [PermissionsBitField.Flags.ViewChannel],
-            },
-          ],
-        }).catch((err) => {
-          // if there was an error check if it was because we have reached the max number of channels
-          if (/Maximum number of channels reached/.test(err.message)) {
-            captureMessage('Maximum number of channels reached');
-          }
+        interaction.guild.channels
+          .create({
+            name: normalizeRoleName(roleName),
+            type: ChannelType.GuildText,
+            // if the class is a 5k+ class put it in the >5k category else put it in the <5k category
+            parent: parseInt(roleName.replace(/[^0-9]/g, '')) >= 5000 ? '1269062321028726877' : '786279356225028177',
+            permissionOverwrites: [
+              {
+                id: interaction.guild.id,
+                deny: [PermissionsBitField.Flags.ViewChannel],
+              },
+              {
+                id: createdRole.id,
+                allow: [PermissionsBitField.Flags.ViewChannel],
+              },
+            ],
+          })
+          .catch((err) => {
+            // if there was an error check if it was because we have reached the max number of channels
+            if (/Maximum number of channels reached/.test(err.message)) {
+              captureMessage('Maximum number of channels reached');
+            }
             throw err; // for now we will just throw the error and let the user know that the class was not created
-        });
+          });
         return createdRole;
       })
       .then((createdRole) => interaction.editReply(`You have been successfully enrolled in ${createdRole.name}`));
@@ -241,3 +147,8 @@ export const command = new SlashCommandBuilder()
       .setAutocomplete(true)
       .setRequired(true),
   );
+
+declare global {
+  var __rootdir__: string; // eslint-disable-line
+  var CLASS_LIST: Set<IClass>; // eslint-disable-line
+}
