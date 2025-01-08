@@ -11,6 +11,7 @@ import {
 } from 'discord.js';
 import fetch from 'node-fetch';
 import { IClass } from '../../types/IClass';
+import { parseJson } from '../../utils/safely';
 
 function searchKuali(query: string): IClass[] {
   // const response = await fetch(
@@ -49,17 +50,19 @@ function checkEdgeCases(roleName: string, interaction: ChatInputCommandInteracti
   const roles = interaction.guild.roles.cache;
   // check if the role is cross listed
   const crossListed = searchKuali(roleName).reduce((pv, nv) => [...pv, ...nv.crossListed], []);
-  const courseList = crossListed.map((course) =>
-    roles.find((r, key, c) => r.name.toUpperCase() == course.split(' ').slice(0, -1).join(' ').toUpperCase()),
-  );
+  const courseList = crossListed
+    .map((course) =>
+      roles.find((r, key, c) => r.name.toUpperCase() == course.split(' ').slice(0, -1).join(' ').toUpperCase()),
+    )
+    .filter((r) => (r ?? false ? true : false)); // coerce r to a bool
 
   addBreadcrumb({
     level: 'info',
-    data: {
+    data: parseJson({
       roleName,
       courseList,
       crossListed,
-    },
+    }),
     message: 'Returning Edge Case Results',
     type: 'message',
   });
