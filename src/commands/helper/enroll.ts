@@ -82,6 +82,14 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   const roleName = normalizeRoleName(selectedCourse.value.toString());
   if (!/^(?:ECE|CS) \d+$/.test(roleName)) {
     interaction.editReply(`you must select an option from the list provided by the enroll command`);
+    captureMessage('Invalid role name attempted', {
+      level: 'warning',
+      tags: {
+        roleName,
+        action: 'execute',
+        event: 'role_validation_failure',
+      },
+    });
     return;
   }
   // Check if the role for the selected course already exists
