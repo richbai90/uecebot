@@ -17,7 +17,8 @@ function searchKuali(query: string): IClass[] {
   // const response = await fetch(
   //   `https://utah.kuali.co/api/v1/catalog/search/619684b0ad08592661eff73a?q=${query.replace(/\s/g, '')}&limit=6`,
   // );
-  return Array.from(global.CLASS_LIST).filter(({ name }) => RegExp(query).test(name));
+  const newQuery = query.replace(/ece\s*/i, 'ECE\\s?');
+  return Array.from(global.CLASS_LIST).filter(({ name }) => RegExp(newQuery, 'i').test(name));
 }
 
 export async function autoComplete(interaction: AutocompleteInteraction): Promise<void> {
