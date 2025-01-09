@@ -29,13 +29,17 @@ export async function autoComplete(interaction: AutocompleteInteraction): Promis
     return;
   }
   const courseList = searchKuali(query);
-  console.log(courseList);
   await interaction.respond(courseList.map((c) => ({ name: `${c.name}`, value: c.code })));
-}
-
-function isGradRole(roleName: string) {
-  const roleNumber = parseInt(roleName.replace(/[^0-9]/g, ''));
-  return roleNumber >= 5000;
+  // Log a notice whenever a query returns 0 results. This way we can proactively check for bugs.
+  if (courseList.length == 0) {
+    captureMessage('Course lookup returned 0 results', {
+      level: 'info',
+      tags: {
+        query,
+        action: 'AUTO_COMPLETE',
+      },
+    });
+  }
 }
 
 // at this point we assume that the class wasn't found so we need to check edge cases
