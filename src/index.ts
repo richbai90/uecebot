@@ -58,21 +58,21 @@ helper.on(Events.InteractionCreate, async (i) => {
   }
 });
 
-helper.on(Events.MessageReactionAdd, async (reaction, user) => {
-  const span = createSpan('MessageReactionAdd', user, null, reaction);
-  try {
-    await addRole(reaction, user);
-  } catch (e) {
-    Sentry.captureException(e);
-  } finally {
-    span?.end(Date.now());
-  }
-});
-
-helper.on(Events.MessageReactionRemove, async (reaction, user) => {
-  const span = createSpan('MessageReactionRemove', user, null, reaction);
-  await rmRole(reaction, user);
-});
+// helper.on(Events.MessageReactionAdd, async (reaction, user) => {
+// const span = createSpan('MessageReactionAdd', user, null, reaction);
+// try {
+// await addRole(reaction, user);
+// } catch (e) {
+// Sentry.captureException(e);
+// } finally {
+// span?.end(Date.now());
+// }
+// });
+//
+// helper.on(Events.MessageReactionRemove, async (reaction, user) => {
+// const span = createSpan('MessageReactionRemove', user, null, reaction);
+// await rmRole(reaction, user);
+// });
 
 function createSpan(
   name: string,
