@@ -9,23 +9,25 @@ import {
   CacheType,
   ChatInputCommandInteraction,
   Client,
+  Collection,
   Events,
   Interaction,
   PartialUser,
   User,
 } from 'discord.js';
-import connect from './utils/connect';
+import connect, { cache_guilds } from './utils/connect';
+import { connect as dbconnect } from './utils/db';
 import { parseJson } from './utils/safely';
 import * as Sentry from '@sentry/node';
 import { addRole, rmRole } from './behaviors/helper/club_react';
+import { wait } from './utils/helpers';
 
+const invites = new Collection(); // setup the collection
 const bots: Map<symbol, Client> = new Map<symbol, Client>();
-const TAKey = Symbol('TA');
 const HelperKey = Symbol('HELPER');
-const ta = connect(TAKey, bots);
 const helper = connect(HelperKey, bots);
 
-assert(ta && helper);
+assert(helper);
 
 helper.on(Events.InteractionCreate, async (i) => {
   let s = createSpan('InteractionCreate', i.user, i);
@@ -57,6 +59,40 @@ helper.on(Events.InteractionCreate, async (i) => {
       console.log('Transaction Complete');
       s.end(Date.now());
     }
+  }
+});
+
+helper.on(Events.InviteCreate, async (invite) => {
+  // when a new invite is created, store it
+  helper.invites?.set(invite.guild.id, new Collection([[invite, invite.uses]]));
+});
+
+helper.on(Events.InviteDelete, async (invite) => {
+  // delete the invite
+  const invites = helper.invites?.get(invite.guild.id);
+  invites.delete(invite);
+});
+
+helper.on('guildMemberAdd', async (member) => {
+  const s = createSpan('GuildMemberAdded', member.user, null);
+  try {
+    // To compare, we need to load the current invite list.
+    const newInvites = await member.guild.invites.fetch();
+    // This is the *existing* invites for the guild.
+    const oldInvites = helper.invites.get(member.guild.id);
+    // Look through the invites, find the one for which the uses went up.
+    const invite = newInvites.find((i) => i.uses > oldInvites.get(i));
+    if (typeof invite == 'undefined') {
+      throw new Error('Could not find a matching invite');
+    }
+    const client = await dbconnect();
+    const role_id = (await client.query('select role_id from invites where invite_id = $1', [invite.url])).rows?.[0];
+    const roles = await member.guild.roles.fetch();
+    member.roles.add(roles.get(role_id));
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    s.end(Date.now());
   }
 });
 

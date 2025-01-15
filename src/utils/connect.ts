@@ -1,4 +1,4 @@
-import { Client, Collection, Events, GatewayIntentBits as Intents, REST, Routes } from 'discord.js';
+import { Client, Collection, Events, GatewayIntentBits as Intents, Invite, REST, Routes } from 'discord.js';
 import { ICommand } from '../types/Command';
 import * as enroll from '../commands/helper/enroll';
 import * as drop from '../commands/helper/drop';
@@ -6,9 +6,21 @@ import * as invite from '../commands/helper/invite';
 import * as Sentry from '@sentry/node';
 import * as declare from '../commands/helper/declare';
 import * as cleanup from '../commands/helper/cleanup';
+import { wait } from '../utils/helpers';
 //import * as help from '../commands/helper/help'; TODO: Add the commands and exports
 interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
+  invites?: Collection<string, Collection<Invite, number>>;
+}
+
+export async function cache_guilds(bot: IBot): Promise<void> {
+  if (!('invites' in bot)) return;
+  const promises = bot.guilds.cache.map(async (guild) => {
+    const firstInvites = await guild.invites.fetch(); // collect all the existing invites
+    bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite, invite.uses])));
+  });
+
+  await Promise.all(promises);
 }
 
 export default function (key: symbol, cache: Map<symbol, Client>): IBot {
@@ -18,11 +30,13 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
   }) as IBot;
   try {
     const token = process.env[key.description];
-    bot.login(token);
     bot.commands = new Collection();
+    bot.invites = new Collection();
+    bot.login(token);
     bot.once(Events.ClientReady, (c) => {
       // and deploy your commands!
       (async () => {
+        await wait(1000); // wait 1s for setup to complete
         if (!bot.commands.size) return;
         try {
           console.log(`Started refreshing ${bot.commands.size} application (/) commands.`);
@@ -37,6 +51,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
           // And of course, make sure you catch and log any errors!
           console.error(error);
         }
+        await cache_guilds(bot);
       })().then(() => {
         console.log(`Ready! Logged in as ${c.user.tag}`);
       });
