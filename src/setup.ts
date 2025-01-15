@@ -12,7 +12,7 @@ async function createTables(client: Client) {
     invite_id text NOT NULL,
     role_id text NOT NULL
 );`);
-  client.end();
+  await client.end();
 }
 
 export async function setup(): Promise<void> {
@@ -98,6 +98,7 @@ export async function setup(): Promise<void> {
       rejectUnauthorized: false,
     },
   });
+  global.CLIENT = client; // store the client for later use
   try {
     await createTables(client);
     global.DBAVAIL = true;
