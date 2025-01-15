@@ -1,5 +1,3 @@
-import { Span } from '@sentry/node';
-
 import { MessageReaction, PartialMessageReaction, PartialUser, User } from 'discord.js';
 
 // Define an interface for role mappings

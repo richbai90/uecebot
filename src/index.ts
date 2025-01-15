@@ -36,7 +36,9 @@ helper.on(Events.InteractionCreate, async (i) => {
         description: 'Auto Complete',
       });
       const interaction = i as AutocompleteInteraction;
-      await helper.commands.get(interaction.commandName).autoComplete(interaction);
+      const cmd = helper.commands.get(interaction.commandName);
+      if ('autocomplete' in cmd) await cmd.autoComplete(interaction);
+      else throw new Error('Autocomplete attempted on a command with no autocomplete property.');
     } else if (i.isChatInputCommand()) {
       s.setAttributes({
         op: 'EXEC',

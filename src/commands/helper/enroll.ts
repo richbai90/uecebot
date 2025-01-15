@@ -12,6 +12,7 @@ import {
 import fetch from 'node-fetch';
 import { IClass } from '../../types/IClass';
 import { parseJson } from '../../utils/safely';
+import { Client } from 'pg';
 
 function searchKuali(query: string): IClass[] {
   // const response = await fetch(
@@ -168,4 +169,6 @@ export const command = new SlashCommandBuilder()
 declare global {
   var __rootdir__: string; // eslint-disable-line
   var CLASS_LIST: Set<IClass>; // eslint-disable-line
+  var CLIENT: Client; // eslint-disable-line
+  var DBAVAIL: boolean; // eslint-disable-line
 }

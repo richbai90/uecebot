@@ -2,6 +2,7 @@ import { Client, Collection, Events, GatewayIntentBits as Intents, REST, Routes 
 import { ICommand } from '../types/Command';
 import * as enroll from '../commands/helper/enroll';
 import * as drop from '../commands/helper/drop';
+import * as invite from '../commands/helper/invite';
 import * as Sentry from '@sentry/node';
 import * as declare from '../commands/helper/declare';
 import * as cleanup from '../commands/helper/cleanup';
@@ -48,6 +49,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
       bot.commands.set('drop', drop);
       bot.commands.set('declare', declare);
       bot.commands.set('cleanupsemester', cleanup);
+      bot.commands.set('invite', invite);
       //bot.commands.set('help', help);
     }
 

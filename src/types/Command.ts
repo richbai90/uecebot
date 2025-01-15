@@ -10,5 +10,5 @@ export interface Command<E extends any[] = [Message, string]> { // eslint-disabl
 export interface ICommand {
   command: Partial<SlashCommandBuilder>;
   execute: (interaction: ChatInputCommandInteraction) => Promise<unknown>;
-  autoComplete: (interaction: AutocompleteInteraction) => Promise<void>;
+  autoComplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
