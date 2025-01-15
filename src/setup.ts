@@ -3,10 +3,10 @@ import * as cheerio from 'cheerio';
 import { forEach } from 'ramda';
 import PropertySet from './utils/PropertySet';
 import { IClass } from './types/IClass';
-import { Client } from 'pg';
+import { connect } from './utils/db';
 
-async function createTables(client: Client) {
-  await client.connect();
+async function createTables() {
+  const client = await connect();
   const result = await client.query(`CREATE TABLE IF NOT EXISTS invites (
     id serial PRIMARY KEY,
     invite_id text NOT NULL,
@@ -92,15 +92,8 @@ export async function setup(): Promise<void> {
   })();
   global.CLASS_LIST = classes;
 
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
-  global.CLIENT = client; // store the client for later use
   try {
-    await createTables(client);
+    await createTables();
     global.DBAVAIL = true;
   } catch {
     global.DBAVAIL = false;
@@ -110,6 +103,5 @@ export async function setup(): Promise<void> {
 declare global {
   var __rootdir__: string; // eslint-disable-line
   var CLASS_LIST: Set<IClass>; // eslint-disable-line
-  var CLIENT: Client; // eslint-disable-line
   var DBAVAIL: boolean; // eslint-disable-line
 }

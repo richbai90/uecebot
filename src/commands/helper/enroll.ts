@@ -169,6 +169,5 @@ export const command = new SlashCommandBuilder()
 declare global {
   var __rootdir__: string; // eslint-disable-line
   var CLASS_LIST: Set<IClass>; // eslint-disable-line
-  var CLIENT: Client; // eslint-disable-line
   var DBAVAIL: boolean; // eslint-disable-line
 }

@@ -10,6 +10,7 @@ import {
 } from 'discord.js';
 import { IClass } from '../../types/IClass';
 import { Client } from 'pg';
+import { connect } from '../../utils/db';
 
 export const command = new SlashCommandBuilder()
   .setName('invite')
@@ -43,14 +44,15 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     unique: true,
   });
 
-  const client = global.CLIENT;
-  await client.connect();
+  const client = await connect();
   try {
     await client.query(`insert into invites (invite_id, role_id) VALUES (${invite.url}, ${role.id})`);
     return interaction.editReply(`Invite created: ${invite.url}`);
   } catch (err) {
     await interaction.editReply(`Failed to store the invite for tracking. Contact an admin for support.`);
     throw err;
+  } finally {
+    await client.end();
   }
 }
 
@@ -87,6 +89,5 @@ function validateRoleAssignment(member: GuildMember, role: Role, guild: Guild): 
 declare global {
   var __rootdir__: string; // eslint-disable-line
   var CLASS_LIST: Set<IClass>; // eslint-disable-line
-  var CLIENT: Client; // eslint-disable-line
   var DBAVAIL: boolean; // eslint-disable-line
 }
