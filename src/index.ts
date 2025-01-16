@@ -15,7 +15,7 @@ import {
   PartialUser,
   User,
 } from 'discord.js';
-import connect, { cache_guilds } from './utils/connect';
+import connect, { cache_invites } from './utils/connect';
 import { connect as dbconnect } from './utils/db';
 import { parseJson } from './utils/safely';
 import * as Sentry from '@sentry/node';
@@ -39,7 +39,7 @@ helper.on(Events.InteractionCreate, async (i) => {
       });
       const interaction = i as AutocompleteInteraction;
       const cmd = helper.commands.get(interaction.commandName);
-      if ('autocomplete' in cmd) await cmd.autoComplete(interaction);
+      if ('autoComplete' in cmd) await cmd.autoComplete(interaction);
       else throw new Error('Autocomplete attempted on a command with no autocomplete property.');
     } else if (i.isChatInputCommand()) {
       s.setAttributes({
@@ -64,13 +64,46 @@ helper.on(Events.InteractionCreate, async (i) => {
 
 helper.on(Events.InviteCreate, async (invite) => {
   // when a new invite is created, store it
-  helper.invites?.set(invite.guild.id, new Collection([[invite, invite.uses]]));
+  const invites = helper.invites?.get(invite.guild.id);
+  if (!invites) {
+    Sentry.addBreadcrumb({
+      category: 'invite_create',
+      data: {
+        invites: parseJson(
+          helper.invites?.reduce(
+            (acc, v, k) => ({
+              ...acc,
+              [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
+            }),
+            {},
+          ),
+        ),
+      },
+    });
+  }
+  invites.set(invite.code, invite);
 });
 
 helper.on(Events.InviteDelete, async (invite) => {
   // delete the invite
   const invites = helper.invites?.get(invite.guild.id);
-  invites.delete(invite);
+  if (!invites) {
+    Sentry.addBreadcrumb({
+      category: 'invite_create',
+      data: {
+        invites: parseJson(
+          helper.invites?.reduce(
+            (acc, v, k) => ({
+              ...acc,
+              [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
+            }),
+            {},
+          ),
+        ),
+      },
+    });
+  }
+  invites.delete(invite.code);
 });
 
 helper.on('guildMemberAdd', async (member) => {
@@ -81,8 +114,15 @@ helper.on('guildMemberAdd', async (member) => {
     // This is the *existing* invites for the guild.
     const oldInvites = helper.invites.get(member.guild.id);
     // Look through the invites, find the one for which the uses went up.
-    const invite = newInvites.find((i) => i.uses > oldInvites.get(i));
+    const invite = newInvites.find((i) => oldInvites.get(i.code)?.uses ?? Infinity < i.uses);
     if (typeof invite == 'undefined') {
+      Sentry.addBreadcrumb({
+        category: 'invite info',
+        data: {
+          newInvites: parseJson(newInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
+          oldInvites: parseJson(oldInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
+        },
+      });
       throw new Error('Could not find a matching invite');
     }
     const client = await dbconnect();

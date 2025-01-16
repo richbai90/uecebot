@@ -10,14 +10,14 @@ import { wait } from '../utils/helpers';
 //import * as help from '../commands/helper/help'; TODO: Add the commands and exports
 interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
-  invites?: Collection<string, Collection<Invite, number>>;
+  invites?: Collection<string, Collection<string, Invite>>;
 }
 
-export async function cache_guilds(bot: IBot): Promise<void> {
+export async function cache_invites(bot: IBot): Promise<void> {
   if (!('invites' in bot)) return;
   const promises = bot.guilds.cache.map(async (guild) => {
     const firstInvites = await guild.invites.fetch(); // collect all the existing invites
-    bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite, invite.uses])));
+    bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite])));
   });
 
   await Promise.all(promises);
@@ -51,7 +51,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
           // And of course, make sure you catch and log any errors!
           console.error(error);
         }
-        await cache_guilds(bot);
+        await cache_invites(bot);
       })().then(() => {
         console.log(`Ready! Logged in as ${c.user.tag}`);
       });
