@@ -138,7 +138,7 @@ helper.on('guildMemberAdd', async (member) => {
         roles: Array.from(roles.keys()),
       },
     });
-    member.roles.add(roles.get(role_id));
+    member.roles.add(new_role);
   } catch (e) {
     Sentry.captureException(e);
   } finally {
