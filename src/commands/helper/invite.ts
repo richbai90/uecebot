@@ -46,7 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 
   const client = await connect();
   try {
-    await client.query(`insert into invites (invite_id, role_id) VALUES ($1, $2)`, [invite.url, role.id]);
+    await client.query(`insert into invites (invite_id, role_id) VALUES ($1, $2)`, [invite.code, role.id]);
     return interaction.editReply(`Invite created: '${invite.url}'`);
   } catch (err) {
     await interaction.editReply(`Failed to store the invite for tracking. Contact an admin for support.`);
