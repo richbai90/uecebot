@@ -128,6 +128,14 @@ helper.on('guildMemberAdd', async (member) => {
     const client = await dbconnect();
     const role_id = (await client.query('select role_id from invites where invite_id = $1', [invite.code])).rows?.[0];
     const roles = await member.guild.roles.fetch();
+    Sentry.addBreadcrumb({
+      category: 'addRoleFromInvite',
+      data: {
+        query: `select role_id from invites where invite_id = '${invite.code}'`,
+        role_id,
+        roles: Array.from(roles.keys()),
+      },
+    });
     member.roles.add(roles.get(role_id));
   } catch (e) {
     Sentry.captureException(e);
