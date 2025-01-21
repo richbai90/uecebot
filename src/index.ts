@@ -130,9 +130,10 @@ helper.on('guildMemberAdd', async (member) => {
     let role_id: string | null = null;
     if (query_result.rowCount > 0) {
       console.log(parseJson(query_result.rows));
-      role_id = query_result.rows[0];
+      role_id = query_result.rows[0]['role_id'];
     } else {
-      console.log('No results from query');
+      console.log('Not a special invite');
+      return;
     }
     if (!role_id) return; // Not a special invite nothing to do
     const roles = await member.guild.roles.fetch();
