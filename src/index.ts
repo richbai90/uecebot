@@ -126,9 +126,10 @@ helper.on('guildMemberAdd', async (member) => {
       throw new Error('Could not find a matching invite');
     }
     const client = await dbconnect();
-    const role_id: string = (
+    const role_id: string | null = (
       await client.query('select role_id from invites where invite_id = $1', [invite.code])
-    ).rows?.[0].toString();
+    ).rows?.[0]?.[0]; // first row first column
+    if (!role_id) return; // Not a special invite nothing to do
     const roles = await member.guild.roles.fetch();
     const new_role = roles.get(role_id.toLowerCase().trim());
     Sentry.addBreadcrumb({
