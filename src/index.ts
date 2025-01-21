@@ -126,15 +126,19 @@ helper.on('guildMemberAdd', async (member) => {
       throw new Error('Could not find a matching invite');
     }
     const client = await dbconnect();
-    const role_id = (await client.query('select role_id from invites where invite_id = $1', [invite.code])).rows?.[0];
+    const role_id = (
+      await client.query('select role_id from invites where invite_id = $1', [invite.code])
+    ).rows?.[0].toString();
     const roles = await member.guild.roles.fetch();
-    const new_role = roles.find((r) => r.id == role_id) || null;
+    const new_role = roles.find((r) => r.id.toString().toLowerCase() === role_id.toLowerCase()) || null;
     Sentry.addBreadcrumb({
       category: 'addRoleFromInvite',
       data: {
         query: `select role_id from invites where invite_id = '${invite.code}'`,
         role_id,
         new_role_id: new_role?.id ?? -1,
+        typeof_roleid: typeof role_id,
+        typeof_newroleid: typeof (new_role?.id ?? -1),
         roles: Array.from(roles.keys()),
       },
     });
