@@ -51,7 +51,13 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
           // And of course, make sure you catch and log any errors!
           console.error(error);
         }
-        await cache_invites(bot);
+        try {
+          await cache_invites(bot);
+          console.log(`Successfully cached ${bot.invites?.size} invites`);
+        } catch (error) {
+          console.error(`failed to cached invites`);
+          console.error(error);
+        }
       })().then(() => {
         console.log(`Ready! Logged in as ${c.user.tag}`);
       });
