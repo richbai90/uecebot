@@ -18,6 +18,7 @@ export async function cache_invites(bot: IBot): Promise<void> {
   const promises = bot.guilds.cache.map(async (guild) => {
     const firstInvites = await guild.invites.fetch(); // collect all the existing invites
     bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite])));
+    console.log(`Cached ${firstInvites.size} invites for guild: ${guild.id}`);
   });
 
   await Promise.all(promises);
