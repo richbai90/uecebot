@@ -126,9 +126,14 @@ helper.on('guildMemberAdd', async (member) => {
       throw new Error('Could not find a matching invite');
     }
     const client = await dbconnect();
-    const role_id: string | null = (
-      await client.query('select role_id from invites where invite_id = $1', [invite.code])
-    ).rows?.[0]?.[0]; // first row first column
+    const query_result = await client.query('select role_id from invites where invite_id = $1', [invite.code]);
+    let role_id: string | null = null;
+    if (query_result.rowCount > 0) {
+      console.log(parseJson(query_result.rows));
+      role_id = query_result.rows[0];
+    } else {
+      console.log('No results from query');
+    }
     if (!role_id) return; // Not a special invite nothing to do
     const roles = await member.guild.roles.fetch();
     const new_role = roles.get(role_id.toLowerCase().trim());
