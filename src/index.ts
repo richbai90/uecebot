@@ -133,12 +133,36 @@ helper.on('guildMemberAdd', async (member) => {
       console.log(parseJson(query_result.rows));
       role_id = query_result.rows[0]['role_id'];
     } else {
-      console.log('Not a special invite');
+      Sentry.captureEvent({
+        message: 'Invite role assignment skipped',
+        level: 'info',
+        tags: {
+          invite_code: invite.code,
+          guild_id: member.guild.id,
+        },
+        extra: {
+          query_result: parseJson(query_result),
+          member_id: member.id,
+        },
+        contexts: {
+          invite: {
+            code: invite.code,
+            uses: invite.uses,
+          },
+          old_invite: {
+            code: oldInvites.get(invite.code),
+            uses: oldInvites.get(invite.code).uses,
+          },
+          guild: {
+            id: member.guild.id,
+            name: member.guild.name,
+          },
+        },
+      });
       return;
     }
-    if (!role_id) return; // Not a special invite nothing to do
     const roles = await member.guild.roles.fetch();
-    const new_role = roles.get(role_id.toLowerCase().trim());
+    const new_role = roles.get(role_id);
     Sentry.addBreadcrumb({
       category: 'addRoleFromInvite',
       data: {
