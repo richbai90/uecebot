@@ -1,4 +1,4 @@
-import { Client, Collection, Events, GatewayIntentBits as Intents, Invite, REST, Routes } from 'discord.js';
+import { Client, Collection, Events, Guild, GatewayIntentBits as Intents, Invite, REST, Routes } from 'discord.js';
 import { ICommand } from '../types/Command';
 import * as enroll from '../commands/helper/enroll';
 import * as drop from '../commands/helper/drop';
@@ -13,13 +13,20 @@ interface IBot extends Client<boolean> {
   invites?: Collection<string, Collection<string, Invite>>;
 }
 
-export async function cache_invites(bot: IBot): Promise<void> {
+async function update_invite_collection(guild, bot) {
+  const firstInvites = await guild.invites.fetch(); // collect all the existing invites
+  bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite])));
+  console.log(`Cached ${firstInvites.size} invites for guild: ${guild.id}`);
+}
+
+export async function cache_invites(bot: IBot, guild: Guild | null): Promise<void> {
   if (!('invites' in bot)) return;
-  const promises = bot.guilds.cache.map(async (guild) => {
-    const firstInvites = await guild.invites.fetch(); // collect all the existing invites
-    bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite])));
-    console.log(`Cached ${firstInvites.size} invites for guild: ${guild.id}`);
-  });
+  let promises: Promise<void>[] = [];
+  if (!guild) {
+    promises = bot.guilds.cache.map(async (guild) => update_invite_collection(guild, bot));
+  } else {
+    promises.push(update_invite_collection(guild, bot));
+  }
 
   await Promise.all(promises);
 }
@@ -53,7 +60,7 @@ export default function (key: symbol, cache: Map<symbol, Client>): IBot {
           console.error(error);
         }
         try {
-          await cache_invites(bot);
+          await cache_invites(bot, null);
           console.log(`Successfully cached ${bot.invites?.size} invites`);
         } catch (error) {
           console.error(`failed to cached invites`);

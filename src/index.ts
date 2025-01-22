@@ -125,6 +125,7 @@ helper.on('guildMemberAdd', async (member) => {
       });
       throw new Error('Could not find a matching invite');
     }
+    await cache_invites(helper, member.guild); // update the invites and their uses
     const client = await dbconnect();
     const query_result = await client.query('select role_id from invites where invite_id = $1', [invite.code]);
     let role_id: string | null = null;
