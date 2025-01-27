@@ -109,10 +109,10 @@ helper.on(Events.InviteDelete, async (invite) => {
 helper.on('guildMemberAdd', async (member) => {
   const s = createSpan('GuildMemberAdded', member.user, null);
   try {
+    // This is the *existing* invites for the guild.
+    const oldInvites = helper.invites.get(member.guild.id).clone();
     // To compare, we need to load the current invite list.
     const newInvites = await member.guild.invites.fetch();
-    // This is the *existing* invites for the guild.
-    const oldInvites = helper.invites.get(member.guild.id);
     // Look through the invites, find the one for which the uses went up.
     const invite = newInvites.find((i) => (oldInvites.get(i.code)?.uses ?? Infinity) < i.uses);
     if (typeof invite == 'undefined') {
