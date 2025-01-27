@@ -114,7 +114,7 @@ helper.on('guildMemberAdd', async (member) => {
     // This is the *existing* invites for the guild.
     const oldInvites = helper.invites.get(member.guild.id);
     // Look through the invites, find the one for which the uses went up.
-    const invite = newInvites.find((i) => oldInvites.get(i.code)?.uses ?? Infinity < i.uses);
+    const invite = newInvites.find((i) => (oldInvites.get(i.code)?.uses ?? Infinity) < i.uses);
     if (typeof invite == 'undefined') {
       Sentry.addBreadcrumb({
         category: 'invite info',
@@ -150,7 +150,7 @@ helper.on('guildMemberAdd', async (member) => {
             uses: invite.uses,
           },
           old_invite: {
-            code: oldInvites.get(invite.code),
+            code: oldInvites.get(invite.code).code,
             uses: oldInvites.get(invite.code).uses,
           },
           guild: {
