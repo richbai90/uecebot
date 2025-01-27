@@ -108,6 +108,12 @@ helper.on(Events.InviteDelete, async (invite) => {
 
 helper.on('guildMemberAdd', async (member) => {
   const s = createSpan('GuildMemberAdded', member.user, null);
+  Sentry.addBreadcrumb({
+    category: 'member info',
+    data: {
+      member: parseJson(member),
+    },
+  });
   try {
     // This is the *existing* invites for the guild.
     const oldInvites = helper.invites.get(member.guild.id).clone();
