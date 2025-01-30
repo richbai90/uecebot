@@ -115,11 +115,11 @@ helper.on('guildMemberAdd', async (member) => {
     },
   });
   try {
-    // This is the *existing* invites for the guild.
+    // Existing invites for the guild
     const oldInvites = helper.invites.get(member.guild.id).clone();
-    // To compare, we need to load the current invite list.
+    // Current invites after the member joined
     const newInvites = await member.guild.invites.fetch();
-    // Look through the invites, find the one for which the uses went up.
+    // Find the invite with increased uses
     const invite = newInvites.find((i) => (oldInvites.get(i.code)?.uses ?? Infinity) < i.uses);
     if (typeof invite == 'undefined') {
       Sentry.addBreadcrumb({
@@ -131,7 +131,12 @@ helper.on('guildMemberAdd', async (member) => {
       });
       throw new Error('Could not find a matching invite');
     }
-    await cache_invites(helper, member.guild); // update the invites and their uses
+    // Update the invite cache with the new uses
+    const invites = helper.invites.get(member.guild.id);
+    if (invites) {
+      invites.set(invite.code, invite);
+    }
+    // Now proceed to assign the role
     const client = await dbconnect();
     const query_result = await client.query('select role_id from invites where invite_id = $1', [invite.code]);
     let role_id: string | null = null;
