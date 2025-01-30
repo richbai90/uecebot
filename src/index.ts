@@ -134,7 +134,10 @@ helper.on('guildMemberAdd', async (member) => {
     // Update the invite cache with the new uses
     const invites = helper.invites.get(member.guild.id);
     if (invites) {
-      invites.set(invite.code, invite);
+      invites.set(invite.code, {
+        uses: invite.uses,
+        url: invite.url,
+      });
     }
     // Now proceed to assign the role
     const client = await dbconnect();
@@ -161,7 +164,7 @@ helper.on('guildMemberAdd', async (member) => {
             uses: invite.uses,
           },
           old_invite: {
-            code: oldInvites.get(invite.code).code,
+            code: invite.code,
             uses: oldInvites.get(invite.code).uses,
           },
           guild: {

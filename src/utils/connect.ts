@@ -8,14 +8,23 @@ import * as declare from '../commands/helper/declare';
 import * as cleanup from '../commands/helper/cleanup';
 import { wait } from '../utils/helpers';
 //import * as help from '../commands/helper/help'; TODO: Add the commands and exports
+
+interface IInviteDetails {
+  uses: number;
+  url: string;
+}
+
 interface IBot extends Client<boolean> {
   commands: Collection<string, ICommand>;
-  invites?: Collection<string, Collection<string, Invite>>;
+  invites?: Collection<string, Collection<string, IInviteDetails>>;
 }
 
 async function update_invite_collection(guild, bot) {
   const firstInvites = await guild.invites.fetch(); // collect all the existing invites
-  bot.invites?.set(guild.id, new Collection(firstInvites.map((invite) => [invite.code, invite])));
+  bot.invites?.set(
+    guild.id,
+    new Collection(firstInvites.map((invite) => [invite.code, { uses: invite.uses, url: invite.url }])),
+  );
   console.log(`Cached ${firstInvites.size} invites for guild: ${guild.id}`);
 }
 
