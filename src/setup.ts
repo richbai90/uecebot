@@ -6,6 +6,7 @@ import { IClass } from './types/IClass';
 import { connect } from './utils/db';
 
 async function createTables() {
+  throw new Error("Not Implemented"); // not in use anymore
   const client = await connect();
   const result = await client.query(`CREATE TABLE IF NOT EXISTS invites (
     id serial PRIMARY KEY,
