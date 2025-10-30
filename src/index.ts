@@ -62,139 +62,139 @@ helper.on(Events.InteractionCreate, async (i) => {
   }
 });
 
-helper.on(Events.InviteCreate, async (invite) => {
-  // when a new invite is created, store it
-  const invites = helper.invites?.get(invite.guild.id);
-  if (!invites) {
-    Sentry.addBreadcrumb({
-      category: 'invite_create',
-      data: {
-        invites: parseJson(
-          helper.invites?.reduce(
-            (acc, v, k) => ({
-              ...acc,
-              [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
-            }),
-            {},
-          ),
-        ),
-      },
-    });
-  }
-  invites.set(invite.code, invite);
-});
+// helper.on(Events.InviteCreate, async (invite) => {
+//   // when a new invite is created, store it
+//   const invites = helper.invites?.get(invite.guild.id);
+//   if (!invites) {
+//     Sentry.addBreadcrumb({
+//       category: 'invite_create',
+//       data: {
+//         invites: parseJson(
+//           helper.invites?.reduce(
+//             (acc, v, k) => ({
+//               ...acc,
+//               [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
+//             }),
+//             {},
+//           ),
+//         ),
+//       },
+//     });
+//   }
+//   invites.set(invite.code, invite);
+// });
 
-helper.on(Events.InviteDelete, async (invite) => {
-  // delete the invite
-  const invites = helper.invites?.get(invite.guild.id);
-  if (!invites) {
-    Sentry.addBreadcrumb({
-      category: 'invite_create',
-      data: {
-        invites: parseJson(
-          helper.invites?.reduce(
-            (acc, v, k) => ({
-              ...acc,
-              [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
-            }),
-            {},
-          ),
-        ),
-      },
-    });
-  }
-  invites.delete(invite.code);
-});
+// helper.on(Events.InviteDelete, async (invite) => {
+//   // delete the invite
+//   const invites = helper.invites?.get(invite.guild.id);
+//   if (!invites) {
+//     Sentry.addBreadcrumb({
+//       category: 'invite_create',
+//       data: {
+//         invites: parseJson(
+//           helper.invites?.reduce(
+//             (acc, v, k) => ({
+//               ...acc,
+//               [k]: v.reduce((acc_, v_, k_) => ({ ...acc_, [k_]: { url: v_.url, uses: v_.uses } }), {}),
+//             }),
+//             {},
+//           ),
+//         ),
+//       },
+//     });
+//   }
+//   invites.delete(invite.code);
+// });
 
-helper.on('guildMemberAdd', async (member) => {
-  const s = createSpan('GuildMemberAdded', member.user, null);
-  Sentry.addBreadcrumb({
-    category: 'member info',
-    data: {
-      member: parseJson(member),
-    },
-  });
-  try {
-    // Existing invites for the guild
-    const oldInvites = helper.invites.get(member.guild.id).clone();
-    // Current invites after the member joined
-    const newInvites = await member.guild.invites.fetch();
-    // Find the invite with increased uses
-    const invite = newInvites.find((i) => (oldInvites.get(i.code)?.uses ?? Infinity) < i.uses);
-    if (typeof invite == 'undefined') {
-      Sentry.addBreadcrumb({
-        category: 'invite info',
-        data: {
-          newInvites: parseJson(newInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
-          oldInvites: parseJson(oldInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
-        },
-      });
-      throw new Error('Could not find a matching invite');
-    }
-    // Update the invite cache with the new uses
-    const invites = helper.invites.get(member.guild.id);
-    if (invites) {
-      invites.set(invite.code, {
-        uses: invite.uses,
-        url: invite.url,
-      });
-    }
-    // Now proceed to assign the role
-    const client = await dbconnect();
-    const query_result = await client.query('select role_id from invites where invite_id = $1', [invite.code]);
-    let role_id: string | null = null;
-    if (query_result.rowCount > 0) {
-      console.log(parseJson(query_result.rows));
-      role_id = query_result.rows[0]['role_id'];
-    } else {
-      Sentry.captureEvent({
-        message: 'Invite role assignment skipped',
-        level: 'info',
-        tags: {
-          invite_code: invite.code,
-          guild_id: member.guild.id,
-        },
-        extra: {
-          query_result: parseJson(query_result),
-          member_id: member.id,
-        },
-        contexts: {
-          invite: {
-            code: invite.code,
-            uses: invite.uses,
-          },
-          old_invite: {
-            code: invite.code,
-            uses: oldInvites.get(invite.code).uses,
-          },
-          guild: {
-            id: member.guild.id,
-            name: member.guild.name,
-          },
-        },
-      });
-      return;
-    }
-    const roles = await member.guild.roles.fetch();
-    const new_role = roles.get(role_id);
-    Sentry.addBreadcrumb({
-      category: 'addRoleFromInvite',
-      data: {
-        query: `select role_id from invites where invite_id = '${invite.code}'`,
-        role_id,
-        new_role_id: new_role?.id ?? -1,
-        typeof_roleid: typeof role_id,
-        typeof_newroleid: typeof (new_role?.id ?? -1),
-        roles: Array.from(roles.keys()),
-      },
-    });
-    member.roles.add(new_role);
-  } catch (e) {
-    Sentry.captureException(e);
-  } finally {
-    s.end(Date.now());
-  }
-});
+// helper.on('guildMemberAdd', async (member) => {
+//   const s = createSpan('GuildMemberAdded', member.user, null);
+//   Sentry.addBreadcrumb({
+//     category: 'member info',
+//     data: {
+//       member: parseJson(member),
+//     },
+//   });
+//   try {
+//     // Existing invites for the guild
+//     const oldInvites = helper.invites.get(member.guild.id).clone();
+//     // Current invites after the member joined
+//     const newInvites = await member.guild.invites.fetch();
+//     // Find the invite with increased uses
+//     const invite = newInvites.find((i) => (oldInvites.get(i.code)?.uses ?? Infinity) < i.uses);
+//     if (typeof invite == 'undefined') {
+//       Sentry.addBreadcrumb({
+//         category: 'invite info',
+//         data: {
+//           newInvites: parseJson(newInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
+//           oldInvites: parseJson(oldInvites?.reduce((acc, v, k) => ({ ...acc, [k]: { url: v.url, uses: v.uses } }), {})),
+//         },
+//       });
+//       throw new Error('Could not find a matching invite');
+//     }
+//     // Update the invite cache with the new uses
+//     const invites = helper.invites.get(member.guild.id);
+//     if (invites) {
+//       invites.set(invite.code, {
+//         uses: invite.uses,
+//         url: invite.url,
+//       });
+//     }
+//     // Now proceed to assign the role
+//     const client = await dbconnect();
+//     const query_result = await client.query('select role_id from invites where invite_id = $1', [invite.code]);
+//     let role_id: string | null = null;
+//     if (query_result.rowCount > 0) {
+//       console.log(parseJson(query_result.rows));
+//       role_id = query_result.rows[0]['role_id'];
+//     } else {
+//       Sentry.captureEvent({
+//         message: 'Invite role assignment skipped',
+//         level: 'info',
+//         tags: {
+//           invite_code: invite.code,
+//           guild_id: member.guild.id,
+//         },
+//         extra: {
+//           query_result: parseJson(query_result),
+//           member_id: member.id,
+//         },
+//         contexts: {
+//           invite: {
+//             code: invite.code,
+//             uses: invite.uses,
+//           },
+//           old_invite: {
+//             code: invite.code,
+//             uses: oldInvites.get(invite.code).uses,
+//           },
+//           guild: {
+//             id: member.guild.id,
+//             name: member.guild.name,
+//           },
+//         },
+//       });
+//       return;
+//     }
+//     const roles = await member.guild.roles.fetch();
+//     const new_role = roles.get(role_id);
+//     Sentry.addBreadcrumb({
+//       category: 'addRoleFromInvite',
+//       data: {
+//         query: `select role_id from invites where invite_id = '${invite.code}'`,
+//         role_id,
+//         new_role_id: new_role?.id ?? -1,
+//         typeof_roleid: typeof role_id,
+//         typeof_newroleid: typeof (new_role?.id ?? -1),
+//         roles: Array.from(roles.keys()),
+//       },
+//     });
+//     member.roles.add(new_role);
+//   } catch (e) {
+//     Sentry.captureException(e);
+//   } finally {
+//     s.end(Date.now());
+//   }
+// });
 
 // helper.on(Events.MessageReactionAdd, async (reaction, user) => {
 // const span = createSpan('MessageReactionAdd', user, null, reaction);
